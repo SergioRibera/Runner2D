@@ -1,6 +1,8 @@
 #[cfg(feature = "ui-debug")]
 use bevy_inspector_egui::WorldInspectorPlugin;
 
+use heron::{PhysicsPlugin, Gravity};
+
 use bevy::{prelude::*, window::WindowMode};
 use bevy_parallax::ParallaxPlugin;
 
@@ -19,8 +21,10 @@ fn main() {
         ..Default::default()
     })
     .insert_resource(ClearColor(Color::rgb(0.462745098, 0.576470588, 0.701960784)))
+    .insert_resource(Gravity::from(Vec3::new(0.0, -9.81 * 10., 0.0)))
     .add_plugins(DefaultPlugins)
     .add_plugin(ParallaxPlugin)
+    .add_plugin(PhysicsPlugin::default())
     .add_plugin(Enviroment)
     .add_plugin(AmbientAudioPlugin)
     .add_plugin(PlayerPlugin);

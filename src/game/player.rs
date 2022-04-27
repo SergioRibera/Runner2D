@@ -1,12 +1,11 @@
 #![allow(dead_code)]
 use bevy::prelude::*;
 
-use impacted::CollisionShape;
+use heron::prelude::*;
 
 pub const PLAYER_SPEED: f32 = 3.0;
 pub const PLAYER_JUMP_FORCE: f32 = 700.0;
 
-const GRAVITY: f32 = -9.821 * 100.0;
 const SPRITE_SIZE: f32 = 150.0;
 
 const SATURATION_DESELECTED: f32 = 0.3;
@@ -23,8 +22,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_startup_system(startup_player)
-            .add_system(player_movement)
-            .add_system(update_shape_transforms);
+            .add_system(player_movement);
     }
 }
 
@@ -57,29 +55,23 @@ fn startup_player(
             ..default()
         })
         .insert(PlayerSettings)
-        .insert(CollisionShape::new_rectangle(165.0, 165.0));
-}
-
-fn update_shape_transforms(
-    mut shapes: Query<(&mut CollisionShape, &GlobalTransform), Changed<GlobalTransform>>,
-) {
-    for (mut shape, transform) in shapes.iter_mut() {
-        shape.set_transform(*transform);
-    }
+        .insert(CollisionShape::Cuboid {
+            half_extends: Vec2::new(20.0, 45.0).extend(0.0),
+            border_radius: None,
+        })
+        .insert(RotationConstraints::lock())
+        .insert(RigidBody::Dynamic);
 }
 
 fn player_movement(
     keyboard_input: Res<Input<KeyCode>>,
-    time: Res<Time>,
     mut query: Query<(&mut PlayerSettings, &mut Sprite, &mut Transform)>,
     // mut camera: Query<(&Camera, &mut Transform)>,
 ) {
-    let delta_time = time.delta_seconds();
     for (_player, mut _sprite, mut transform) in query.iter_mut() {
         if keyboard_input.pressed(KeyCode::Space) {
             transform.translation.y *= PLAYER_JUMP_FORCE;
         }
-        // transform.translation.y -= GRAVITY * delta_time;
         transform.translation.x += PLAYER_SPEED;
     }
 }

@@ -1,6 +1,9 @@
+#![allow(dead_code)]
+
 use bevy::prelude::*;
+use heron::prelude::*;
+
 use bevy_parallax::{LayerData, ParallaxCameraComponent, ParallaxMoveEvent, ParallaxResource};
-use impacted::CollisionShape;
 
 use super::player::PLAYER_SPEED;
 
@@ -12,15 +15,11 @@ pub struct Enviroment;
 #[derive(Component)]
 pub struct Floor;
 
-//
-// Data to configure the plugin
-//
-pub struct EnviromentResource {}
-
-impl Default for EnviromentResource {
-    fn default() -> Self {
-        Self {}
-    }
+#[derive(PhysicsLayer)]
+pub enum Layer {
+    Player,
+    World,
+    Enemy
 }
 
 //
@@ -28,14 +27,11 @@ impl Default for EnviromentResource {
 //
 impl Plugin for Enviroment {
     fn build(&self, app: &mut App) {
-        app.insert_resource(EnviromentResource {
-            ..Default::default()
-        });
         app.insert_resource(ParallaxResource {
             layer_data: vec![
                 // Layer 1
                 LayerData {
-                    speed: 0.9,
+                    speed: 1.0,
                     path: get_resource_name("09_2"),
                     tile_size: Vec2::new(ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT),
                     cols: 1,
@@ -47,7 +43,7 @@ impl Plugin for Enviroment {
                 },
                 // Gray trees
                 LayerData {
-                    speed: 0.7,
+                    speed: 0.8,
                     path: get_resource_name("05_5"),
                     tile_size: Vec2::new(ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT),
                     cols: 1,
@@ -71,7 +67,7 @@ impl Plugin for Enviroment {
                 },
                 // Top leaf
                 LayerData {
-                    speed: 0.7,
+                    speed: 0.6,
                     path: get_resource_name("02_7"),
                     tile_size: Vec2::new(ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT),
                     cols: 1,
@@ -108,7 +104,7 @@ fn get_resource_name(name: &str) -> String {
 fn setup_enviroment(
     mut commands: Commands,
     windows: Res<Windows>,
-    _asset_server: Res<AssetServer>,
+    asset_server: Res<AssetServer>,
 ) {
     let window = windows.get_primary().unwrap();
     commands
@@ -116,27 +112,22 @@ fn setup_enviroment(
         .insert(ParallaxCameraComponent);
 
     commands
-        .spawn()
-        .insert(Transform {
-            translation: Vec3::new(0.0, -575.0, 5.0),
+        .spawn_bundle(SpriteBundle {
+            texture: asset_server.load("DebugPixel.png"),
+            transform: Transform {
+                translation: Vec3::new(0.0, -(window.height() * 0.55), 5.0),
+                ..Default::default()
+
+            },
             ..default()
         })
         .insert(Floor)
-        .insert(CollisionShape::new_rectangle(window.width(), window.height()));
-
-    // // Spawning the floor
-    // commands
-    //     .spawn_bundle(SpriteBundle {
-    //         texture: asset_server.load(get_resource_name("02_7").as_str()),
-    //         transform: Transform::from_translation(Vec3::new(0.0, -450.0, 5.0)),
-    //         sprite: Sprite {
-    //             custom_size: Some(Vec2::new(928.0, 793.0)),
-    //             ..Default::default()
-    //         },
-    //         ..default()
-    //     })
-    //     .insert(Floor)
-    //     .insert(CollisionShape::new_rectangle(928.0, 793.0));
+        .insert(CollisionShape::Cuboid {
+            half_extends: Vec2::new(window.width(), 50.0).extend(0.0),
+            border_radius: None,
+        })
+        .insert(RotationConstraints::lock())
+        .insert(RigidBody::Static);
 }
 
 pub fn move_camera_system(

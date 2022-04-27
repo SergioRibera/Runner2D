@@ -250,6 +250,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy-parallax"
+version = "0.1.2"
+dependencies = [
+ "bevy",
+ "serde",
+]
+
+[[package]]
 name = "bevy_animation"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -666,6 +674,8 @@ version = "0.0.1"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
+ "bevy-parallax",
+ "impacted",
 ]
 
 [[package]]
@@ -1586,6 +1596,7 @@ checksum = "f43e957e744be03f5801a55472f593d43fabdebf25a4585db250f04d86b1675f"
 dependencies = [
  "bytemuck",
  "mint",
+ "num-traits",
  "serde",
 ]
 
@@ -1778,6 +1789,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "impacted"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb08eec8f2e464be20cd25d9d731d74b375cebfb5fd1ec48621458c6d84b0e01"
+dependencies = [
+ "bevy_ecs",
+ "bevy_transform",
+ "glam",
+ "rustc_version 0.4.0",
+ "smallvec",
+ "thiserror",
+]
+
+[[package]]
 name = "indexmap"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1965,6 +1990,12 @@ name = "libm"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fc7aa29613bd6a620df431842069224d8bc9011086b1db4c0e0cd47fa03ec9a"
+
+[[package]]
+name = "libm"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33a33a362ce288760ec6a508b94caaec573ae7d3bbbd91b87aa0bad4456839db"
 
 [[package]]
 name = "libudev-sys"
@@ -2363,6 +2394,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a64b1ec5cda2586e284722486d802acf1f7dbdc623e2bfc57e65ca1cd099290"
 dependencies = [
  "autocfg",
+ "libm 0.2.2",
 ]
 
 [[package]]
@@ -2762,7 +2794,16 @@ version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
 dependencies = [
- "semver",
+ "semver 0.9.0",
+]
+
+[[package]]
+name = "rustc_version"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
+dependencies = [
+ "semver 1.0.7",
 ]
 
 [[package]]
@@ -2811,6 +2852,12 @@ checksum = "1d7eb9ef2c18661902cc47e535f9bc51b78acd254da71d375c2f6720d9a40403"
 dependencies = [
  "semver-parser",
 ]
+
+[[package]]
+name = "semver"
+version = "1.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d65bd28f48be7196d222d95b9243287f48d27aca604e08497513019ff0502cc4"
 
 [[package]]
 name = "semver-parser"
@@ -2926,7 +2973,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d022496b16281348b52d0e30ae99e01a73d737b2f45d38fed4edf79f9325a1d5"
 dependencies = [
  "discard",
- "rustc_version",
+ "rustc_version 0.2.3",
  "serde",
  "serde_json",
  "stdweb-derive",
@@ -2983,7 +3030,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b0dc6d20ce137f302edf90f9cd3d278866fd7fb139efca6f246161222ad6d87"
 dependencies = [
  "lazy_static",
- "libm",
+ "libm 0.1.4",
 ]
 
 [[package]]

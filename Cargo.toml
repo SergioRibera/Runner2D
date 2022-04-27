@@ -4,11 +4,13 @@ version = "0.0.1"
 edition = "2021"
 
 [features]
-default = [ ]
+default = [ "ui-debug" ]
+ui-debug = [ "dep:bevy-inspector-egui" ]
+dist = []
 
 [dependencies]
 bevy = "0.7"
-bevy-parallax = "0.1.2"
-
-[dev-dependencies]
+# bevy-parallax = "0.1.2"
+bevy-parallax = { path = "../Contributions/Bevy/bevy-parallax" }
+impacted = { version = "1.4.0", features = ["bevy-07"] }
 bevy-inspector-egui = { version = "0.10.0", optional = true }

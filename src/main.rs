@@ -6,7 +6,7 @@ use bevy_parallax::ParallaxPlugin;
 
 mod game;
 
-use game::{enviroment::Enviroment, player::PlayerPlugin};
+use game::{enviroment::Enviroment, player::PlayerPlugin, audio::AmbientAudioPlugin};
 
 fn main() {
     let mut app = App::new();
@@ -22,6 +22,7 @@ fn main() {
     .add_plugins(DefaultPlugins)
     .add_plugin(ParallaxPlugin)
     .add_plugin(Enviroment)
+    .add_plugin(AmbientAudioPlugin)
     .add_plugin(PlayerPlugin);
     // .add_system(load_scene_system);
 

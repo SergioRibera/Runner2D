@@ -1,5 +1,7 @@
 use bevy::{audio::AudioSink, prelude::*};
 
+use super::GameState;
+
 pub struct AmbientAudioPlugin;
 
 impl Plugin for AmbientAudioPlugin {
@@ -15,16 +17,21 @@ fn setup(
     asset_server: Res<AssetServer>,
     audio: Res<Audio>,
     audio_sinks: Res<Assets<AudioSink>>,
+    _game_state: Res<State<GameState>>,
 ) {
-    let ambient_music = asset_server.load("audio/game_ambient.ogg");
-    let handle = audio_sinks.get_handle(audio.play_with_settings(
-        ambient_music,
-        PlaybackSettings {
-            repeat: true,
-            volume: 0.15,
-            ..Default::default()
-        },
-    ));
+    // if game_state.current().eq(&GameState::Splash) || game_state.current().eq(&GameState::SplashEnd) {
+    //     return;
+    // }
 
-    commands.insert_resource(MusicController(handle));
+    // let ambient_music = asset_server.load("audio/game_ambient.ogg");
+    // let handle = audio_sinks.get_handle(audio.play_with_settings(
+    //     ambient_music,
+    //     PlaybackSettings {
+    //         repeat: true,
+    //         volume: 0.15,
+    //         ..Default::default()
+    //     },
+    // ));
+    //
+    // commands.insert_resource(MusicController(handle));
 }

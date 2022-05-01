@@ -2,8 +2,8 @@
 
 use bevy::prelude::*;
 use heron::prelude::*;
-
 use bevy_parallax::{LayerData, ParallaxCameraComponent, ParallaxMoveEvent, ParallaxResource};
+use bevy_asset_loader::AssetCollection;
 
 use super::player::PLAYER_SPEED;
 
@@ -14,6 +14,14 @@ pub struct Enviroment;
 
 #[derive(Component)]
 pub struct Floor;
+
+#[derive(AssetCollection)]
+pub struct EnviromentAssets {
+    #[asset(path = "audio/game_ambient.ogg")]
+    background: Handle<AudioSource>,
+    #[asset(path = "enviroment/Layer_0009_2.png")]
+    layer_0: Handle<Image>,
+}
 
 #[derive(PhysicsLayer)]
 pub enum Layer {

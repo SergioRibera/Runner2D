@@ -1,4 +1,9 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
+use bevy_tweening::{
+    lens::TextColorLens, Animator, EaseFunction, Lens, Tween, TweenCompleted, TweeningType,
+};
 
 use crate::GlobalUIAssets;
 
@@ -130,6 +135,46 @@ fn setup_ui(mut commands: Commands, font_assets: Res<GlobalUIAssets>) {
                                 ..default()
                             })
                             .with_children(|btn_parent| {
+                                // TODO: Add button signal selected (>)
+                                // add tweener to ping pong the transparency
+                                let tween = Tween::new(
+                                    EaseFunction::CubicInOut,
+                                    TweeningType::PingPong,
+                                    Duration::from_millis(500),
+                                    TextColorLens {
+                                        start: Color::rgba(0.0, 0.0, 0.0, 0.0),
+                                        end: Color::WHITE,
+                                        section: 0,
+                                    },
+                                );
+
+                                btn_parent
+                                    .spawn_bundle(TextBundle {
+                                        style: Style {
+                                            position: Rect {
+                                                top: Val::Percent(0.5),
+                                                ..Default::default()
+                                            },
+                                            ..Default::default()
+                                        },
+                                        text: Text::with_section(
+                                            ">",
+                                            TextStyle {
+                                                font: font_assets.pixel_font.clone(),
+                                                font_size: 48.,
+                                                color: Color::rgba(0., 0., 0., 0.),
+                                            },
+                                            TextAlignment {
+                                                vertical: VerticalAlign::Center,
+                                                horizontal: HorizontalAlign::Center,
+                                            },
+                                        ),
+                                        visibility: Visibility { is_visible: false },
+                                        ..Default::default()
+                                    })
+                                    .insert(Animator::new(tween));
+
+                                // Instancing text content of button
                                 btn_parent.spawn_bundle(TextBundle {
                                     text: Text::with_section(
                                         text.0,
@@ -145,9 +190,6 @@ fn setup_ui(mut commands: Commands, font_assets: Res<GlobalUIAssets>) {
                                     ),
                                     ..Default::default()
                                 });
-                                // TODO: Add button signal selected (>)
-                                // add tweener to ping pong the transparency
-
                             });
                     }
                 });

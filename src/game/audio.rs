@@ -17,7 +17,7 @@ fn setup(
     asset_server: Res<AssetServer>,
     audio: Res<Audio>,
     audio_sinks: Res<Assets<AudioSink>>,
-    _game_state: Res<State<GameState>>,
+    // _game_state: Res<State<GameState>>,
 ) {
     // if game_state.current().eq(&GameState::Splash) || game_state.current().eq(&GameState::SplashEnd) {
     //     return;

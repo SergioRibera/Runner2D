@@ -15,7 +15,7 @@ use game::{
     enviroment::{Enviroment, EnviromentAssets},
     player::{PlayerAssets, PlayerPlugin},
     splash::{load_splash, on_splash},
-    GameState,
+    GameState, mainmenu::MainMenu,
 };
 
 #[derive(AssetCollection)]
@@ -44,6 +44,7 @@ fn main() {
         .with_collection::<ImageAssets>()
         .with_collection::<EnviromentAssets>()
         .with_collection::<PlayerAssets>()
+        .with_collection::<GlobalUIAssets>()
         .build(&mut app);
 
     app.insert_resource(WindowDescriptor {
@@ -58,20 +59,21 @@ fn main() {
         0.701960784,
     )))
     .add_state(GameState::Splash)
-    .add_system_set(
-        SystemSet::on_enter(GameState::Splash)
-            .with_system(load_splash)
-    )
+    // .add_system_set(
+    //     SystemSet::on_enter(GameState::Splash)
+    //         .with_system(load_splash)
+    // )
     // .add_system_set(
     //     SystemSet::on_enter(GameState::SplashEnd)
     //         .with_system(on_splash_end)
     // )
-    .add_system(on_splash)
+    // .add_system(on_splash)
     .insert_resource(Gravity::from(Vec3::new(0.0, -9.81 * 10., 0.0)))
     .add_plugins(DefaultPlugins)
     .add_plugin(TweeningPlugin)
     .add_plugin(ParallaxPlugin)
     .add_plugin(PhysicsPlugin::default())
+    .add_plugin(MainMenu)
     .add_plugin(Enviroment)
     .add_plugin(AmbientAudioPlugin)
     .add_plugin(PlayerPlugin);

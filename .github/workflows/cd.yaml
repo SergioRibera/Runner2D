@@ -18,9 +18,9 @@ on:
       itch:
         required: true
         type: string
-    secrets:
       token:
         required: true
+        type: string
 
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.token }}
+          repo_token: ${{ inputs.token }}
           file: ${{ inputs.file }}
           asset_name: ${{ inputs.name }}-${{ inputs.channel }}-${{ steps.get_version.outputs.tag }}.dmg
           tag: ${{ github.ref }}

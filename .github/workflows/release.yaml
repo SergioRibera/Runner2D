@@ -18,8 +18,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: little-core-labs/get-git-tag@v3.0.1
-        id: get_version
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
@@ -44,9 +42,8 @@ jobs:
 
       - name: Uploading
         uses: SergioRibera/Runner2D/.github/workflows/cd.yaml@main
-        secrets:
-          token: ${{ secrets.GITHUB_TOKEN }}
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           username: ${{ env.username }}
           name: ${{ env.binary }}
           channel: wasm
@@ -83,9 +80,8 @@ jobs:
 
       - name: Uploading
         uses: SergioRibera/Runner2D/.github/workflows/cd.yaml@main
-        secrets:
-          token: ${{ secrets.GITHUB_TOKEN }}
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           username: ${{ env.username }}
           name: ${{ env.binary }}
           channel: linux
@@ -120,9 +116,8 @@ jobs:
 
       - name: Uploading
         uses: SergioRibera/Runner2D/.github/workflows/cd.yaml@main
-        secrets:
-          token: ${{ secrets.GITHUB_TOKEN }}
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           username: ${{ env.username }}
           name: ${{ env.binary }}
           channel: windows
@@ -156,9 +151,8 @@ jobs:
 
       - name: Uploading
         uses: SergioRibera/Runner2D/.github/workflows/cd.yaml@main
-        secrets:
-          token: ${{ secrets.GITHUB_TOKEN }}
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           username: ${{ env.username }}
           name: ${{ env.binary }}
           channel: macos

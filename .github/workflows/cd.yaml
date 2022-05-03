@@ -19,7 +19,7 @@ on:
         required: true
         type: string
     secrets:
-      GITHUB_TOKEN:
+      token:
         required: true
 
 
@@ -32,7 +32,7 @@ jobs:
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.token }}
           file: ${{ inputs.file }}
           asset_name: ${{ inputs.name }}-${{ inputs.channel }}-${{ steps.get_version.outputs.tag }}.dmg
           tag: ${{ github.ref }}

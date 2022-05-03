@@ -258,6 +258,7 @@ dependencies = [
 [[package]]
 name = "bevy-parallax"
 version = "0.1.2"
+source = "git+https://github.com/SergioRibera/bevy-parallax?branch=feature_add_position_parameter#3bc1a69d06f7c27d0fdafbfa751a5e3d2d53ab65"
 dependencies = [
  "bevy",
  "serde",
@@ -341,6 +342,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "bevy_asset_ron"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "095f32d5f5a852e6e09e9b499d0d2818673e60b35d0913529c0a6a72c991dcde"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "ron",
+ "serde",
 ]
 
 [[package]]
@@ -715,9 +728,12 @@ dependencies = [
  "bevy-inspector-egui",
  "bevy-parallax",
  "bevy_asset_loader",
+ "bevy_asset_ron",
  "bevy_tweening",
  "heron",
  "leafwing-input-manager",
+ "rand",
+ "serde",
 ]
 
 [[package]]
@@ -819,6 +835,8 @@ dependencies = [
 [[package]]
 name = "bevy_tweening"
 version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01cb9827ea7aa38cb5ac847eadc7f2d5cbce158ada7b4f58d586caf059313769"
 dependencies = [
  "bevy",
  "interpolation",

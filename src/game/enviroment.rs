@@ -1,11 +1,13 @@
 #![allow(dead_code)]
 
 use bevy::prelude::*;
-use heron::prelude::*;
-use bevy_parallax::{LayerData, ParallaxCameraComponent, ParallaxMoveEvent, ParallaxResource};
 use bevy_asset_loader::AssetCollection;
+use bevy_parallax::{LayerData, ParallaxCameraComponent, ParallaxMoveEvent, ParallaxResource};
+use heron::prelude::*;
 
-use super::player::PLAYER_SPEED;
+use crate::{GameConfigAsset, GameConfigController};
+
+use super::{player::PLAYER_SPEED, GameState};
 
 const ENVIROMENT_WIDTH: f32 = 928.0;
 const ENVIROMENT_HEIGHT: f32 = 793.0;
@@ -27,7 +29,7 @@ pub struct EnviromentAssets {
 pub enum Layer {
     Player,
     World,
-    Enemy
+    Enemy,
 }
 
 //
@@ -99,9 +101,11 @@ impl Plugin for Enviroment {
                 },
             ],
             ..Default::default()
-        });
-        app.add_startup_system(setup_enviroment);
-        // app.add_system(move_camera_system);
+        })
+        .add_system_set(SystemSet::on_enter(GameState::MainMenu).with_system(setup_enviroment))
+        .add_system_set(
+            SystemSet::on_update(GameState::InGame).with_system(move_camera_system),
+        );
     }
 }
 
@@ -112,8 +116,11 @@ fn get_resource_name(name: &str) -> String {
 fn setup_enviroment(
     mut commands: Commands,
     windows: Res<Windows>,
-    asset_server: Res<AssetServer>,
+    asset_server: ResMut<AssetServer>,
+    assets: Res<Assets<GameConfigAsset>>,
+    q: Res<GameConfigController>,
 ) {
+    let cfg = assets.get(q.handle.clone()).unwrap();
     let window = windows.get_primary().unwrap();
     commands
         .spawn_bundle(OrthographicCameraBundle::new_2d())
@@ -123,9 +130,8 @@ fn setup_enviroment(
         .spawn_bundle(SpriteBundle {
             texture: asset_server.load("DebugPixel.png"),
             transform: Transform {
-                translation: Vec3::new(0.0, -(window.height() * 0.34), 5.0),
+                translation: Vec3::new(0.0, -(window.height() * cfg.floor_multiplier), 5.0),
                 ..Default::default()
-
             },
             ..default()
         })

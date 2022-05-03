@@ -4,6 +4,8 @@ use bevy_asset_loader::AssetCollection;
 use heron::prelude::*;
 use leafwing_input_manager::prelude::*;
 
+use crate::{GameConfigController, GameConfigAsset};
+
 use super::{GameSettings, GameState};
 
 pub const PLAYER_SPEED: f32 = 3.0;
@@ -37,7 +39,8 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
+        app
+            .add_system_set(
             SystemSet::on_enter(GameState::MainMenu)
                 .with_system(startup_player),
         )
@@ -57,10 +60,14 @@ fn startup_player(
     windows: Res<Windows>,
     game_cfg: Res<GameSettings>,
     asset_server: Res<AssetServer>,
+    assets: Res<Assets<GameConfigAsset>>,
+    q: Res<GameConfigController>,
 ) {
+    let cfg = assets.get(q.handle.clone()).unwrap();
     let window = windows.get_primary().unwrap();
+    let intit_player_pos_x = -(window.width() * cfg.player_initial_pos_x);
 
-    let intit_player_pos_x = -(window.width() * 0.35);
+    commands .insert_resource(Gravity::from(Vec3::new(0.0, -9.81 * cfg.gravity_multiplier, 0.0)));
 
     commands
         .spawn_bundle(SpriteBundle {
@@ -70,7 +77,7 @@ fn startup_player(
                 ..Default::default()
             },
             sprite: Sprite {
-                custom_size: Some(Vec2::new(170., 170.)),
+                custom_size: Some(Vec2::new(cfg.player_size_x, cfg.player_size_y)),
                 ..default()
             },
             ..default()
@@ -81,7 +88,7 @@ fn startup_player(
         })
         .insert(PlayerSettings)
         .insert(CollisionShape::Cuboid {
-            half_extends: Vec2::new(20., 45.).extend(0.),
+            half_extends: Vec2::new(cfg.player_box_size_x, cfg.player_box_size_y).extend(0.),
             border_radius: None,
         })
         .insert(RotationConstraints::lock())

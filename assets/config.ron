@@ -1,0 +1,10 @@
+(
+    gravity_multiplier: 70.0,
+    player_initial_pos_x: 0.35,
+    player_size_x: 170.0,
+    player_size_y: 170.0,
+    player_box_size_x: 20.0,
+    player_box_size_y: 45.0,
+    audio_volume: 0.13,
+    floor_multiplier: 0.35,
+)

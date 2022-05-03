@@ -2,12 +2,13 @@
 #[cfg(feature = "ui-debug")]
 use bevy_inspector_egui::WorldInspectorPlugin;
 
-use bevy::{prelude::*, window::WindowMode};
+use bevy::{prelude::*, window::WindowMode, reflect::TypeUuid};
 use leafwing_input_manager::prelude::*;
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use bevy_parallax::ParallaxPlugin;
 use bevy_tweening::TweeningPlugin;
-use heron::{Gravity, PhysicsPlugin};
+use heron::PhysicsPlugin;
+use bevy_asset_ron::*;
 
 mod game;
 
@@ -18,6 +19,23 @@ use game::{
     splash::load_splash,
     GameState, mainmenu::MainMenu, GameSettings, transition::TransitionPlugin,
 };
+
+pub struct GameConfigController {
+    handle: Handle<GameConfigAsset>,
+}
+
+#[derive(serde::Deserialize, TypeUuid)]
+#[uuid = "b7f64775-6e72-4080-9ced-167607f1f0b2"]
+pub struct GameConfigAsset{
+    pub gravity_multiplier: f32,
+    pub player_initial_pos_x: f32,
+    pub player_size_x: f32,
+    pub player_size_y: f32,
+    pub player_box_size_x: f32,
+    pub player_box_size_y: f32,
+    pub audio_volume: f32,
+    pub floor_multiplier: f32,
+}
 
 #[derive(AssetCollection)]
 pub struct ImageAssets {
@@ -65,8 +83,9 @@ fn main() {
         SystemSet::on_enter(GameState::Splash)
             .with_system(load_splash)
     )
-    .insert_resource(Gravity::from(Vec3::new(0.0, -9.81 * 10., 0.0)))
     .add_plugins(DefaultPlugins)
+    .add_plugin(RonAssetPlugin::<GameConfigAsset>::new(&["ron"]))
+    .add_startup_system(load_config)
     .add_plugin(TweeningPlugin)
     .add_plugin(TransitionPlugin)
     .add_plugin(ParallaxPlugin)
@@ -75,10 +94,18 @@ fn main() {
     .add_plugin(MainMenu)
     .add_plugin(Enviroment)
     .add_plugin(AmbientAudioPlugin)
-    .add_plugin(PlayerPlugin);
+    .add_plugin(PlayerPlugin)
+    ;
 
     #[cfg(feature = "ui-debug")]
     app.add_plugin(WorldInspectorPlugin::new());
 
     app.run();
+}
+fn load_config(
+    mut commands: Commands,
+    asset_server: ResMut<AssetServer>,
+) {
+    let handle = asset_server.load("config.ron");
+    commands.insert_resource(GameConfigController { handle });
 }

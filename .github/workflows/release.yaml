@@ -43,7 +43,7 @@ jobs:
           dest: ${{ env.binary }}.zip
 
       - name: Uploading
-        uses: SergioRibera/Runner2D/.github/workflows/cd.yaml
+        uses: SergioRibera/Runner2D/.github/workflows/cd.yaml@main
         secrets:
           token: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -82,7 +82,7 @@ jobs:
           dest: ${{ env.binary }}.zip
 
       - name: Uploading
-        uses: SergioRibera/Runner2D/.github/workflows/cd.yaml
+        uses: SergioRibera/Runner2D/.github/workflows/cd.yaml@main
         secrets:
           token: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -119,7 +119,7 @@ jobs:
           dest: ${{ env.binary }}.zip
 
       - name: Uploading
-        uses: SergioRibera/Runner2D/.github/workflows/cd.yaml
+        uses: SergioRibera/Runner2D/.github/workflows/cd.yaml@main
         secrets:
           token: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -155,7 +155,7 @@ jobs:
           hdiutil create -fs HFS+ -volname "${{ env.binary }}" -srcfolder ${{ env.binary }}.app ${{ env.binary }}.dmg
 
       - name: Uploading
-        uses: SergioRibera/Runner2D/.github/workflows/cd.yaml
+        uses: SergioRibera/Runner2D/.github/workflows/cd.yaml@main
         secrets:
           token: ${{ secrets.GITHUB_TOKEN }}
         with:

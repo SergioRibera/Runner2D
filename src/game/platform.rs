@@ -18,7 +18,7 @@ pub fn draw_atlas(mut commands: Commands, windows: Res<Windows>, assets: Res<Env
             ..Default::default()
         },
         sprite: TextureAtlasSprite::new(0),
-        texture_atlas: atlas.clone(),
+        texture_atlas: atlas,
         ..Default::default()
     });
 }

@@ -131,7 +131,7 @@ fn player_movement(
                     transform.translation.x += PLAYER_SPEED;
                 }
                 if action.just_pressed(PlayerAction::Jump) {
-                    transform.translation.y = transform.translation.y + PLAYER_JUMP_FORCE;
+                    transform.translation.y += PLAYER_JUMP_FORCE;
                 }
                 transform.translation.x += PLAYER_SPEED;
             }

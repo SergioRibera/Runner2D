@@ -1,3 +1,4 @@
+#![allow(clippy::type_complexity)]
 use std::time::Duration;
 
 use bevy::prelude::*;
@@ -115,7 +116,6 @@ fn build_main_menu(mut commands: Commands, font_assets: Res<GlobalUIAssets>) {
                     left: Val::Percent(0.),
                     right: Val::Auto,
                     bottom: Val::Auto,
-                    ..default()
                 },
                 ..Default::default()
             },
@@ -195,7 +195,6 @@ fn build_credits_menu(commands: &mut Commands, font_assets: &Res<GlobalUIAssets>
                     left: Val::Percent(0.),
                     right: Val::Auto,
                     bottom: Val::Auto,
-                    ..default()
                 },
                 ..Default::default()
             },

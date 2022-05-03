@@ -79,9 +79,9 @@ fn main() {
     })
     .insert_resource(Msaa { samples: 4 })
     .insert_resource(ClearColor(Color::rgb(
-        0.462745098,
-        0.576470588,
-        0.701960784,
+        0.462_745_1,
+        0.576_470_6,
+        0.701_960_8,
     )))
     .insert_resource(GameSettings::default())
     .add_state(GameState::Splash)

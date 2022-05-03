@@ -53,6 +53,10 @@ jobs:
           asset_name: ${{ env.binary }}-wasm-${{ steps.get_version.outputs.tag }}.zip
           tag: ${{ github.ref }}
           overwrite: true
+      - uses: actions/upload-artifact@master
+        with:
+          path: ${{ env.binary }}.zip
+          name: ${{ env.binary }}-macos-${{ steps.get_version.outputs.tag }}.dmg
 
   # Build for Linux
   release-linux:
@@ -92,15 +96,10 @@ jobs:
           asset_name: ${{ env.binary }}-linux-${{ steps.get_version.outputs.tag }}.zip
           tag: ${{ github.ref }}
           overwrite: true
-      # Upload To Itch.io
-      - name: Upload to Itch.io
-        uses: josephbmanley/butler-publish-itchio-action@master
-        env:
-          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
-          CHANNEL: linux
-          ITCH_GAME: ${{ env.gamename }}
-          ITCH_USER: ${{ env.username }}
-          PACKAGE: ${{ env.binary }}.zip
+      - uses: actions/upload-artifact@master
+        with:
+          path: ${{ env.binary }}.zip
+          name: ${{ env.binary }}-macos-${{ steps.get_version.outputs.tag }}.dmg
 
   # Build for Windows
   release-windows:
@@ -138,15 +137,10 @@ jobs:
           asset_name: ${{ env.binary }}-windows-${{ steps.get_version.outputs.tag }}.zip
           tag: ${{ github.ref }}
           overwrite: true
-      # Upload To Itch.io
-      - name: Upload to Itch.io
-        uses: josephbmanley/butler-publish-itchio-action@master
-        env:
-          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
-          CHANNEL: windows
-          ITCH_GAME: ${{ env.gamename }}
-          ITCH_USER: ${{ env.username }}
-          PACKAGE: ${{ env.binary }}.zip
+      - uses: actions/upload-artifact@master
+        with:
+          path: ${{ env.binary }}.zip
+          name: ${{ env.binary }}-macos-${{ steps.get_version.outputs.tag }}.dmg
 
   # Build for macOS
   release-macos:
@@ -182,12 +176,42 @@ jobs:
           asset_name: ${{ env.binary }}-macos-${{ steps.get_version.outputs.tag }}.dmg
           tag: ${{ github.ref }}
           overwrite: true
+      - uses: actions/upload-artifact@master
+        with:
+          path: ${{ env.binary }}.dmg
+          name: ${{ env.binary }}-macos-${{ steps.get_version.outputs.tag }}.dmg
+
+  upload-itch:
+    runs-on: ubuntu-latest
+    needs:
+      # - release-wasm
+      - release-linux
+      - release-windows
+      - release-macos
+
+    strategy:
+      fail-fast: true
+      matrix:
+        channel:
+          - linux
+          - windows
+          - macos
+        ext:
+          - "zip"
+          - "zip"
+          - "dmg"
+
+    steps:
+      - uses: actions/download-artifact@master
+        with:
+          path: .
       # Upload To Itch.io
       - name: Upload to Itch.io
         uses: josephbmanley/butler-publish-itchio-action@master
         env:
           BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
-          CHANNEL: macos
+          CHANNEL: ${{ matrix.channel }}
           ITCH_GAME: ${{ env.gamename }}
           ITCH_USER: ${{ env.username }}
-          PACKAGE: ${{ env.binary }}.zip
+          PACKAGE: ${{ env.binary }}-${{matrix.channel}}-${{ steps.get_version.outputs.tag }}.${{matrix.ext}}
+          VERSION: ${{ github.ref }}

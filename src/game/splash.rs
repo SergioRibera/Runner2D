@@ -3,10 +3,8 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 use bevy_tweening::{
-    lens::TextColorLens, Animator, EaseFunction, Lens, Tween, TweenCompleted, TweeningType,
+    lens::TextColorLens, Animator, EaseFunction, Lens, Tween, TweeningType,
 };
-
-use super::GameState;
 
 #[derive(Component)]
 pub struct SplashProgress;
@@ -82,33 +80,27 @@ pub fn load_splash(mut commands: Commands, fonts: Res<AssetServer>) {
         .insert(UIElement)
         .insert(Animator::new(tween));
 }
-
-pub fn on_splash(
-    mut commands: Commands,
-    quey_text: Query<&Animator<Text>, With<UIElement>>,
-    entity_text: Query<Entity, With<UIElement>>,
-    mut game_state: ResMut<State<GameState>>,
-) {
-    match game_state.current() {
-        GameState::Splash => {
-            // if let Ok(anim_logo) = query_anim.get_single() {
-            //     if let Some(tween_logo) = anim_logo.tweenable() {
-            //         let progress = tween_logo.progress();
-            //         println!("{:5.1}%", progress * 100.);
-            //     }
-            // }
-            if let Ok(anim_text) = quey_text.get_single() {
-                if let Some(tween_text) = anim_text.tweenable() {
-                    if tween_text.progress() >= 0.8 {
-                        game_state.set(GameState::MainMenu).unwrap();
-                        println!("Splash completed 1");
-                        if let Ok(entity) = entity_text.get_single() {
-                            commands.entity(entity).despawn();
-                        }
-                    }
-                }
-            }
-        }
-        _ => return,
-    }
-}
+//
+// pub fn on_splash(
+//     mut commands: Commands,
+//     quey_text: Query<&Animator<Text>, With<UIElement>>,
+//     entity_text: Query<Entity, With<UIElement>>,
+//     mut game_state: ResMut<State<GameState>>,
+// ) {
+//     match game_state.current() {
+//         GameState::Splash => {
+//             if let Ok(anim_text) = quey_text.get_single() {
+//                 if let Some(tween_text) = anim_text.tweenable() {
+//                     if tween_text.progress() >= 0.8 {
+//                         game_state.set(GameState::MainMenu).unwrap();
+//                         println!("Splash completed 1");
+//                         if let Ok(entity) = entity_text.get_single() {
+//                             commands.entity(entity).despawn();
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//         _ => return,
+//     }
+// }

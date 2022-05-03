@@ -18,9 +18,9 @@ pub struct Floor;
 #[derive(AssetCollection)]
 pub struct EnviromentAssets {
     #[asset(path = "audio/game_ambient.ogg")]
-    background: Handle<AudioSource>,
+    pub background: Handle<AudioSource>,
     #[asset(path = "enviroment/Layer_0009_2.png")]
-    layer_0: Handle<Image>,
+    pub layer_0: Handle<Image>,
 }
 
 #[derive(PhysicsLayer)]
@@ -101,7 +101,7 @@ impl Plugin for Enviroment {
             ..Default::default()
         });
         app.add_startup_system(setup_enviroment);
-        app.add_system(move_camera_system);
+        // app.add_system(move_camera_system);
     }
 }
 
@@ -123,7 +123,7 @@ fn setup_enviroment(
         .spawn_bundle(SpriteBundle {
             texture: asset_server.load("DebugPixel.png"),
             transform: Transform {
-                translation: Vec3::new(0.0, -(window.height() * 0.55), 5.0),
+                translation: Vec3::new(0.0, -(window.height() * 0.34), 5.0),
                 ..Default::default()
 
             },

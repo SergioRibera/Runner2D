@@ -1,12 +1,15 @@
 use bevy::{audio::AudioSink, prelude::*};
 
-use super::GameState;
+use super::{enviroment::EnviromentAssets, GameState};
 
 pub struct AmbientAudioPlugin;
 
 impl Plugin for AmbientAudioPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup);
+        app.add_system_set(
+            SystemSet::on_enter(GameState::MainMenu)
+                .with_system(setup),
+        );
     }
 }
 
@@ -14,24 +17,18 @@ pub struct MusicController(Handle<AudioSink>);
 
 fn setup(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
+    audio_assets: Res<EnviromentAssets>,
     audio: Res<Audio>,
     audio_sinks: Res<Assets<AudioSink>>,
-    // _game_state: Res<State<GameState>>,
 ) {
-    // if game_state.current().eq(&GameState::Splash) || game_state.current().eq(&GameState::SplashEnd) {
-    //     return;
-    // }
-
-    // let ambient_music = asset_server.load("audio/game_ambient.ogg");
-    // let handle = audio_sinks.get_handle(audio.play_with_settings(
-    //     ambient_music,
-    //     PlaybackSettings {
-    //         repeat: true,
-    //         volume: 0.15,
-    //         ..Default::default()
-    //     },
-    // ));
-    //
-    // commands.insert_resource(MusicController(handle));
+    commands.remove_resource::<MusicController>();
+    let handle = audio_sinks.get_handle(audio.play_with_settings(
+        audio_assets.background.clone(),
+        PlaybackSettings {
+            repeat: true,
+            volume: 0.15,
+            ..Default::default()
+        },
+    ));
+    commands.insert_resource(MusicController(handle));
 }

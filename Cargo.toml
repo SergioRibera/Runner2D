@@ -16,6 +16,7 @@ dist = []
 bevy = "0.7"
 # bevy-parallax = "0.1.2"
 bevy_asset_loader = "0.10.0"
+leafwing-input-manager = "0.3.0"
 heron = { version = "3.0.0", features = [ "2d" ] }
 bevy-parallax = { path = "../Contributions/Bevy/bevy-parallax" }
 bevy_tweening = { path = "../Contributions/Bevy/bevy_tweening"}

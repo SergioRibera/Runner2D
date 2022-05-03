@@ -2,8 +2,9 @@
 use bevy::prelude::*;
 use bevy_asset_loader::AssetCollection;
 use heron::prelude::*;
+use leafwing_input_manager::prelude::*;
 
-use super::GameState;
+use super::{GameSettings, GameState};
 
 pub const PLAYER_SPEED: f32 = 3.0;
 pub const PLAYER_JUMP_FORCE: f32 = 700.0;
@@ -18,6 +19,14 @@ const ALPHA: f32 = 0.92;
 
 const SHOWCASE_TIMER_SECS: f32 = 3.0;
 
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug)]
+pub enum PlayerAction {
+    Pause,
+    Jump,
+    MoveLeft,
+    MoveRight,
+}
+
 #[derive(AssetCollection)]
 pub struct PlayerAssets {
     #[asset(path = "player/2BlueWizardIdle/Chara - BlueIdle00001.png")]
@@ -29,10 +38,10 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
-            SystemSet::on_update(GameState::InGame)
-                .with_system(startup_player)
-                .with_system(player_movement),
-        );
+            SystemSet::on_enter(GameState::MainMenu)
+                .with_system(startup_player),
+        )
+        .add_system(player_movement);
     }
 }
 
@@ -43,10 +52,15 @@ fn get_resource_name(name: &str) -> String {
     format!("player/2BlueWizardIdle/Chara - BlueIdle000{}.png", name)
 }
 
-fn startup_player(mut commands: Commands, windows: Res<Windows>, asset_server: Res<AssetServer>) {
+fn startup_player(
+    mut commands: Commands,
+    windows: Res<Windows>,
+    game_cfg: Res<GameSettings>,
+    asset_server: Res<AssetServer>,
+) {
     let window = windows.get_primary().unwrap();
 
-    let intit_player_pos_x = -(window.width() * 0.75);
+    let intit_player_pos_x = -(window.width() * 0.35);
 
     commands
         .spawn_bundle(SpriteBundle {
@@ -60,6 +74,10 @@ fn startup_player(mut commands: Commands, windows: Res<Windows>, asset_server: R
                 ..default()
             },
             ..default()
+        })
+        .insert_bundle(InputManagerBundle::<PlayerAction> {
+            action_state: ActionState::default(),
+            input_map: game_cfg.player_ctrl.clone(),
         })
         .insert(PlayerSettings)
         .insert(CollisionShape::Cuboid {
@@ -87,22 +105,29 @@ fn startup_player(mut commands: Commands, windows: Res<Windows>, asset_server: R
 }
 
 fn player_movement(
-    keyboard_input: Res<Input<KeyCode>>,
-    game_state: Res<State<GameState>>,
+    input: Query<&ActionState<PlayerAction>, With<PlayerSettings>>,
     mut query: Query<(&mut PlayerSettings, &mut Sprite, &mut Transform)>,
+    mut game_state: ResMut<State<GameState>>,
     // mut camera: Query<(&Camera, &mut Transform)>,
 ) {
-    match game_state.current() {
-        GameState::InGame => {
-            for (_player, mut _sprite, mut transform) in query.iter_mut() {
-                if keyboard_input.pressed(KeyCode::Space) {
+    if let Ok(action) = input.get_single() {
+        if action.just_pressed(PlayerAction::Pause) {
+            game_state.set(GameState::MainMenu).unwrap();
+            return;
+        }
+        for (_player, mut _sprite, mut transform) in query.iter_mut() {
+            if game_state.current().eq(&GameState::InGame) {
+                if action.pressed(PlayerAction::MoveLeft) {
+                    transform.translation.x -= PLAYER_SPEED;
+                }
+                if action.pressed(PlayerAction::MoveRight) {
+                    transform.translation.x += PLAYER_SPEED;
+                }
+                if action.just_pressed(PlayerAction::Jump) {
                     transform.translation.y *= PLAYER_JUMP_FORCE;
                 }
                 transform.translation.x += PLAYER_SPEED;
             }
-        }
-        _ => {
-            return;
         }
     }
 }

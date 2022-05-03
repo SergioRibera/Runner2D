@@ -3,6 +3,7 @@
 use bevy_inspector_egui::WorldInspectorPlugin;
 
 use bevy::{prelude::*, window::WindowMode};
+use leafwing_input_manager::prelude::*;
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use bevy_parallax::ParallaxPlugin;
 use bevy_tweening::TweeningPlugin;
@@ -13,9 +14,9 @@ mod game;
 use game::{
     audio::AmbientAudioPlugin,
     enviroment::{Enviroment, EnviromentAssets},
-    player::{PlayerAssets, PlayerPlugin},
-    splash::{load_splash, on_splash},
-    GameState, mainmenu::MainMenu,
+    player::{PlayerAssets, PlayerPlugin, PlayerAction},
+    splash::load_splash,
+    GameState, mainmenu::MainMenu, GameSettings, transition::TransitionPlugin,
 };
 
 #[derive(AssetCollection)]
@@ -58,21 +59,19 @@ fn main() {
         0.576470588,
         0.701960784,
     )))
+    .insert_resource(GameSettings::default())
     .add_state(GameState::Splash)
-    // .add_system_set(
-    //     SystemSet::on_enter(GameState::Splash)
-    //         .with_system(load_splash)
-    // )
-    // .add_system_set(
-    //     SystemSet::on_enter(GameState::SplashEnd)
-    //         .with_system(on_splash_end)
-    // )
-    // .add_system(on_splash)
+    .add_system_set(
+        SystemSet::on_enter(GameState::Splash)
+            .with_system(load_splash)
+    )
     .insert_resource(Gravity::from(Vec3::new(0.0, -9.81 * 10., 0.0)))
     .add_plugins(DefaultPlugins)
     .add_plugin(TweeningPlugin)
+    .add_plugin(TransitionPlugin)
     .add_plugin(ParallaxPlugin)
     .add_plugin(PhysicsPlugin::default())
+    .add_plugin(InputManagerPlugin::<PlayerAction>::default())
     .add_plugin(MainMenu)
     .add_plugin(Enviroment)
     .add_plugin(AmbientAudioPlugin)

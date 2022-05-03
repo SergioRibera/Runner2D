@@ -8,7 +8,7 @@ on:
 env:
   # update with the name of the main binary
   binary: SR_2DRunner
-  gamename: 2d-runner
+  gamename: runner
   username: sergioribera
 
 

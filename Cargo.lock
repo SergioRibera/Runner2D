@@ -721,22 +721,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_runner"
-version = "0.0.1"
-dependencies = [
- "bevy",
- "bevy-inspector-egui",
- "bevy-parallax",
- "bevy_asset_loader",
- "bevy_asset_ron",
- "bevy_tweening",
- "heron",
- "leafwing-input-manager",
- "rand",
- "serde",
-]
-
-[[package]]
 name = "bevy_scene"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3216,6 +3200,22 @@ checksum = "1b861ecaade43ac97886a512b360d01d66be9f41f3c61088b42cedf92e03d678"
 dependencies = [
  "base64",
  "bitflags",
+ "serde",
+]
+
+[[package]]
+name = "runner"
+version = "0.0.3"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+ "bevy-parallax",
+ "bevy_asset_loader",
+ "bevy_asset_ron",
+ "bevy_tweening",
+ "heron",
+ "leafwing-input-manager",
+ "rand",
  "serde",
 ]
 

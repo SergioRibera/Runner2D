@@ -18,7 +18,7 @@ bevy = "0.7"
 rand = "0.8.5"
 bevy_tweening = "0.4.0"
 bevy_asset_ron = "0.4.0"
-bevy_asset_loader = "0.10.0"
+bevy_asset_loader = { version = "0.10.0", features = [ "2d" ]}
 leafwing-input-manager = "0.3.0"
 heron = { version = "3.0.0", features = [ "2d" ] }
 bevy-parallax = { git = "https://github.com/SergioRibera/bevy-parallax", branch = "feature_add_position_parameter" }

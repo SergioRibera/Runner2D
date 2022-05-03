@@ -7,7 +7,7 @@ use heron::prelude::*;
 
 use crate::{GameConfigAsset, GameConfigController};
 
-use super::{player::PLAYER_SPEED, GameState};
+use super::{player::PLAYER_SPEED, GameState, platform::draw_atlas};
 
 const ENVIROMENT_WIDTH: f32 = 928.0;
 const ENVIROMENT_HEIGHT: f32 = 793.0;
@@ -23,6 +23,9 @@ pub struct EnviromentAssets {
     pub background: Handle<AudioSource>,
     #[asset(path = "enviroment/Layer_0009_2.png")]
     pub layer_0: Handle<Image>,
+    #[asset(texture_atlas(tile_size_x = 16., tile_size_y = 16., columns = 12, rows = 12))]
+    #[asset(path = "enviroment/platforms.png")]
+    pub platforms: Handle<TextureAtlas>,
 }
 
 #[derive(PhysicsLayer)]
@@ -102,7 +105,7 @@ impl Plugin for Enviroment {
             ],
             ..Default::default()
         })
-        .add_system_set(SystemSet::on_enter(GameState::MainMenu).with_system(setup_enviroment))
+        .add_system_set(SystemSet::on_enter(GameState::MainMenu).with_system(setup_enviroment).with_system(draw_atlas))
         .add_system_set(SystemSet::on_update(GameState::InGame).with_system(move_camera_system));
     }
 }

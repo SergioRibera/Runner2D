@@ -1,5 +1,5 @@
 [package]
-name = "bevy_runner"
+name = "runner"
 version = "0.0.1"
 edition = "2021"
 

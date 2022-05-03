@@ -34,7 +34,7 @@ jobs:
           cargo build --release --target wasm32-unknown-unknown
       - name: Prepare package
         run: |
-          wasm-bindgen --no-typescript --out-name ${{env.binary}} --out-dir wasm --target web target/wasm32-unknown-unknown/release/${{ env.binary }}.wasm
+          wasm-bindgen --no-typescript --out-name ${{env.gamename}} --out-dir wasm --target web target/wasm32-unknown-unknown/release/${{ env.gamename }}.wasm
           cp -r assets wasm/
       - name: Package as a zip
         uses: vimtor/action-zip@v1
@@ -73,7 +73,7 @@ jobs:
       - name: Prepare package
         run: |
           mkdir linux
-          cp target/x86_64-unknown-linux-gnu/release/${{ env.binary }} linux/
+          cp target/x86_64-unknown-linux-gnu/release/${{ env.gamename }} linux/
           cp -r assets linux/
       - name: Package as a zip
         uses: vimtor/action-zip@v1
@@ -119,7 +119,7 @@ jobs:
       - name: Prepare package
         run: |
           mkdir windows
-          cp target/x86_64-pc-windows-msvc/release/${{ env.binary }}.exe windows/
+          cp target/x86_64-pc-windows-msvc/release/${{ env.gamename }}.exe windows/
           cp -r assets windows/
       - name: Package as a zip
         uses: vimtor/action-zip@v1
@@ -168,7 +168,7 @@ jobs:
       - name: Prepare Package
         run: |
           mkdir -p ${{ env.binary }}.app/Contents/MacOS
-          cp target/x86_64-apple-darwin/release/${{ env.binary }} ${{ env.binary }}.app/Contents/MacOS/
+          cp target/x86_64-apple-darwin/release/${{ env.gamename }} ${{ env.binary }}.app/Contents/MacOS/
           cp -r assets ${{ env.binary }}.app/Contents/MacOS/
           hdiutil create -fs HFS+ -volname "${{ env.binary }}" -srcfolder ${{ env.binary }}.app ${{ env.binary }}.dmg
       - name: Upload binaries to release

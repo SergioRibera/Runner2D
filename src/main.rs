@@ -2,22 +2,24 @@
 #[cfg(feature = "ui-debug")]
 use bevy_inspector_egui::WorldInspectorPlugin;
 
-use bevy::{prelude::*, window::WindowMode, reflect::TypeUuid};
-use leafwing_input_manager::prelude::*;
+use bevy::{prelude::*, reflect::TypeUuid, window::WindowMode, asset::AssetServerSettings};
 use bevy_asset_loader::{AssetCollection, AssetLoader};
+use bevy_asset_ron::*;
 use bevy_parallax::ParallaxPlugin;
 use bevy_tweening::TweeningPlugin;
 use heron::PhysicsPlugin;
-use bevy_asset_ron::*;
+use leafwing_input_manager::prelude::*;
 
 mod game;
 
 use game::{
     audio::AmbientAudioPlugin,
     enviroment::{Enviroment, EnviromentAssets},
-    player::{PlayerAssets, PlayerPlugin, PlayerAction},
+    mainmenu::MainMenu,
+    player::{PlayerAction, PlayerAssets, PlayerPlugin},
     splash::load_splash,
-    GameState, mainmenu::MainMenu, GameSettings, transition::TransitionPlugin,
+    transition::TransitionPlugin,
+    GameSettings, GameState,
 };
 
 pub struct GameConfigController {
@@ -26,7 +28,7 @@ pub struct GameConfigController {
 
 #[derive(serde::Deserialize, TypeUuid)]
 #[uuid = "b7f64775-6e72-4080-9ced-167607f1f0b2"]
-pub struct GameConfigAsset{
+pub struct GameConfigAsset {
     pub gravity_multiplier: f32,
     pub player_initial_pos_x: f32,
     pub player_size_x: f32,
@@ -71,6 +73,10 @@ fn main() {
         mode: WindowMode::BorderlessFullscreen,
         ..Default::default()
     })
+    .insert_resource(AssetServerSettings {
+        watch_for_changes: true,
+        ..default()
+    })
     .insert_resource(Msaa { samples: 4 })
     .insert_resource(ClearColor(Color::rgb(
         0.462745098,
@@ -79,10 +85,7 @@ fn main() {
     )))
     .insert_resource(GameSettings::default())
     .add_state(GameState::Splash)
-    .add_system_set(
-        SystemSet::on_enter(GameState::Splash)
-            .with_system(load_splash)
-    )
+    .add_system_set(SystemSet::on_enter(GameState::Splash).with_system(load_splash))
     .add_plugins(DefaultPlugins)
     .add_plugin(RonAssetPlugin::<GameConfigAsset>::new(&["ron"]))
     .add_startup_system(load_config)
@@ -94,18 +97,14 @@ fn main() {
     .add_plugin(MainMenu)
     .add_plugin(Enviroment)
     .add_plugin(AmbientAudioPlugin)
-    .add_plugin(PlayerPlugin)
-    ;
+    .add_plugin(PlayerPlugin);
 
     #[cfg(feature = "ui-debug")]
     app.add_plugin(WorldInspectorPlugin::new());
 
     app.run();
 }
-fn load_config(
-    mut commands: Commands,
-    asset_server: ResMut<AssetServer>,
-) {
+fn load_config(mut commands: Commands, asset_server: ResMut<AssetServer>) {
     let handle = asset_server.load("config.ron");
     commands.insert_resource(GameConfigController { handle });
 }

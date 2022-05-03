@@ -5,6 +5,6 @@
     player_size_y: 170.0,
     player_box_size_x: 20.0,
     player_box_size_y: 45.0,
-    audio_volume: 0.13,
+    audio_volume: 0.0,
     floor_multiplier: 0.35,
 )

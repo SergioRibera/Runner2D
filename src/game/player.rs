@@ -4,12 +4,12 @@ use bevy_asset_loader::AssetCollection;
 use heron::prelude::*;
 use leafwing_input_manager::prelude::*;
 
-use crate::{GameConfigController, GameConfigAsset};
+use crate::{GameConfigAsset, GameConfigController};
 
 use super::{GameSettings, GameState};
 
 pub const PLAYER_SPEED: f32 = 3.0;
-pub const PLAYER_JUMP_FORCE: f32 = 700.0;
+pub const PLAYER_JUMP_FORCE: f32 = 30.0;
 
 const SPRITE_SIZE: f32 = 150.0;
 
@@ -39,12 +39,8 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_system_set(
-            SystemSet::on_enter(GameState::MainMenu)
-                .with_system(startup_player),
-        )
-        .add_system(player_movement);
+        app.add_system_set(SystemSet::on_enter(GameState::MainMenu).with_system(startup_player))
+            .add_system(player_movement);
     }
 }
 
@@ -67,7 +63,11 @@ fn startup_player(
     let window = windows.get_primary().unwrap();
     let intit_player_pos_x = -(window.width() * cfg.player_initial_pos_x);
 
-    commands .insert_resource(Gravity::from(Vec3::new(0.0, -9.81 * cfg.gravity_multiplier, 0.0)));
+    commands.insert_resource(Gravity::from(Vec3::new(
+        0.0,
+        -9.81 * cfg.gravity_multiplier,
+        0.0,
+    )));
 
     commands
         .spawn_bundle(SpriteBundle {
@@ -113,7 +113,11 @@ fn startup_player(
 
 fn player_movement(
     input: Query<&ActionState<PlayerAction>, With<PlayerSettings>>,
-    mut query: Query<(&mut PlayerSettings, &mut Sprite, &mut Transform)>,
+    mut query: Query<(
+        &mut PlayerSettings,
+        &mut Sprite,
+        &mut Transform,
+    )>,
     mut game_state: ResMut<State<GameState>>,
     // mut camera: Query<(&Camera, &mut Transform)>,
 ) {
@@ -131,7 +135,7 @@ fn player_movement(
                     transform.translation.x += PLAYER_SPEED;
                 }
                 if action.just_pressed(PlayerAction::Jump) {
-                    transform.translation.y *= PLAYER_JUMP_FORCE;
+                    transform.translation.y = transform.translation.y + PLAYER_JUMP_FORCE;
                 }
                 transform.translation.x += PLAYER_SPEED;
             }

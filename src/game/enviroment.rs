@@ -7,7 +7,7 @@ use heron::prelude::*;
 
 use crate::{GameConfigAsset, GameConfigController};
 
-use super::{player::PLAYER_SPEED, GameState, platform::draw_atlas};
+use super::{platform::draw_atlas, player::PLAYER_SPEED, GameState};
 
 const ENVIROMENT_WIDTH: f32 = 928.0;
 const ENVIROMENT_HEIGHT: f32 = 793.0;
@@ -105,7 +105,11 @@ impl Plugin for Enviroment {
             ],
             ..Default::default()
         })
-        .add_system_set(SystemSet::on_enter(GameState::MainMenu).with_system(setup_enviroment).with_system(draw_atlas))
+        .add_system_set(
+            SystemSet::on_enter(GameState::MainMenu)
+                .with_system(setup_enviroment)
+                .with_system(draw_atlas),
+        )
         .add_system_set(SystemSet::on_update(GameState::InGame).with_system(move_camera_system));
     }
 }

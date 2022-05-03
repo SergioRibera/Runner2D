@@ -2,9 +2,7 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_tweening::{
-    lens::TextColorLens, Animator, EaseFunction, Lens, Tween, TweeningType,
-};
+use bevy_tweening::{lens::TextColorLens, Animator, EaseFunction, Lens, Tween, TweeningType};
 
 #[derive(Component)]
 pub struct SplashProgress;

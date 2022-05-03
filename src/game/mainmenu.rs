@@ -98,7 +98,7 @@ fn setup_ui(
     build_main_menu(commands, font_assets);
 }
 
-fn build_main_menu (mut commands: Commands, font_assets: Res<GlobalUIAssets>) {
+fn build_main_menu(mut commands: Commands, font_assets: Res<GlobalUIAssets>) {
     let text_buttons = vec![
         ("Play", MainMenuState::Play),
         ("Options", MainMenuState::Options),
@@ -185,67 +185,47 @@ fn build_credits_menu(commands: &mut Commands, font_assets: &Res<GlobalUIAssets>
         ("Music", vec!["Sergio Ribera"]),
         ("Sound Effects", vec!["Sergio Ribera"]),
     ];
-    commands.spawn_bundle(NodeBundle {
-        style: Style {
-            flex_direction: FlexDirection::ColumnReverse,
-            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-            position: Rect {
-                top: Val::Percent(0.),
-                left: Val::Percent(0.),
-                right: Val::Auto,
-                bottom: Val::Auto,
-                ..default()
-            },
-            ..Default::default()
-        },
-        color: UiColor(Color::rgba(0., 0., 0., 0.)),
-        ..default()
-    })
-    .with_children(|parent| {
-        build_btn(parent, font_assets.pixel_font.clone(), "Back", MainMenuState::Main);
-
-        for (title, content) in credits {
-            parent.spawn_bundle(TextBundle {
-                style: Style {
-                    size: Size::new(Val::Percent(100.0), Val::Percent(30.0)),
-                    position: Rect {
-                        bottom: Val::Percent(6.),
-                        left: Val::Percent(13.),
-                        ..Default::default()
-                    },
-                    ..Default::default()
+    commands
+        .spawn_bundle(NodeBundle {
+            style: Style {
+                flex_direction: FlexDirection::ColumnReverse,
+                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                position: Rect {
+                    top: Val::Percent(0.),
+                    left: Val::Percent(0.),
+                    right: Val::Auto,
+                    bottom: Val::Auto,
+                    ..default()
                 },
-                text: Text::with_section(
-                    title,
-                    TextStyle {
-                        font: font_assets.pixel_font.clone(),
-                        font_size: 62.0,
-                        color: Color::WHITE,
-                    },
-                    TextAlignment {
-                        vertical: VerticalAlign::Center,
-                        horizontal: HorizontalAlign::Center,
-                    },
-                ),
-                ..default()
-            });
+                ..Default::default()
+            },
+            color: UiColor(Color::rgba(0., 0., 0., 0.)),
+            ..default()
+        })
+        .with_children(|parent| {
+            build_btn(
+                parent,
+                font_assets.pixel_font.clone(),
+                "Back",
+                MainMenuState::Main,
+            );
 
-            for text in content {
+            for (title, content) in credits {
                 parent.spawn_bundle(TextBundle {
                     style: Style {
-                        size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                        size: Size::new(Val::Percent(100.0), Val::Percent(30.0)),
                         position: Rect {
-                            top: Val::Percent(0.),
-                            left: Val::Percent(0.),
+                            bottom: Val::Percent(6.),
+                            left: Val::Percent(13.),
                             ..Default::default()
                         },
                         ..Default::default()
                     },
                     text: Text::with_section(
-                        text,
+                        title,
                         TextStyle {
                             font: font_assets.pixel_font.clone(),
-                            font_size: 32.0,
+                            font_size: 62.0,
                             color: Color::WHITE,
                         },
                         TextAlignment {
@@ -255,10 +235,35 @@ fn build_credits_menu(commands: &mut Commands, font_assets: &Res<GlobalUIAssets>
                     ),
                     ..default()
                 });
-            }
-        }
 
-    });
+                for text in content {
+                    parent.spawn_bundle(TextBundle {
+                        style: Style {
+                            size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                            position: Rect {
+                                top: Val::Percent(0.),
+                                left: Val::Percent(0.),
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        },
+                        text: Text::with_section(
+                            text,
+                            TextStyle {
+                                font: font_assets.pixel_font.clone(),
+                                font_size: 32.0,
+                                color: Color::WHITE,
+                            },
+                            TextAlignment {
+                                vertical: VerticalAlign::Center,
+                                horizontal: HorizontalAlign::Center,
+                            },
+                        ),
+                        ..default()
+                    });
+                }
+            }
+        });
 }
 
 fn build_btn(parent: &mut ChildBuilder, font: Handle<Font>, text: &str, action: MainMenuState) {

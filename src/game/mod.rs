@@ -1,17 +1,17 @@
 #![allow(dead_code)]
 
-use bevy::prelude::{Gamepad, KeyCode, GamepadButtonType};
+use bevy::prelude::{Gamepad, GamepadButtonType, KeyCode};
 use leafwing_input_manager::prelude::*;
 
 use self::player::PlayerAction;
 
-pub mod enviroment;
-pub mod player;
 pub mod audio;
-pub mod splash;
+pub mod enviroment;
 pub mod mainmenu;
-pub mod transition;
 pub mod platform;
+pub mod player;
+pub mod splash;
+pub mod transition;
 
 pub struct GameSettings {
     pub music_volume: f32,

@@ -8,10 +8,7 @@ pub struct AmbientAudioPlugin;
 
 impl Plugin for AmbientAudioPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            SystemSet::on_enter(GameState::MainMenu)
-                .with_system(setup),
-        );
+        app.add_system_set(SystemSet::on_enter(GameState::MainMenu).with_system(setup));
     }
 }
 

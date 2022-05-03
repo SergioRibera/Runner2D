@@ -1,10 +1,7 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_tweening::{
-    lens::TextColorLens,
-    Animator, EaseFunction, Tween, TweeningType,
-};
+use bevy_tweening::{lens::TextColorLens, Animator, EaseFunction, Tween, TweeningType};
 
 const COLOR_TWEEN_DURATION: u64 = 500;
 

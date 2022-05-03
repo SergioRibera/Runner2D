@@ -2,7 +2,7 @@
 #[cfg(feature = "ui-debug")]
 use bevy_inspector_egui::WorldInspectorPlugin;
 
-use bevy::{prelude::*, reflect::TypeUuid, window::WindowMode, asset::AssetServerSettings};
+use bevy::{asset::AssetServerSettings, prelude::*, reflect::TypeUuid, window::WindowMode};
 use bevy_asset_loader::{AssetCollection, AssetLoader};
 use bevy_asset_ron::*;
 use bevy_parallax::ParallaxPlugin;

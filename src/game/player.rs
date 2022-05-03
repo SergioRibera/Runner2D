@@ -113,11 +113,7 @@ fn startup_player(
 
 fn player_movement(
     input: Query<&ActionState<PlayerAction>, With<PlayerSettings>>,
-    mut query: Query<(
-        &mut PlayerSettings,
-        &mut Sprite,
-        &mut Transform,
-    )>,
+    mut query: Query<(&mut PlayerSettings, &mut Sprite, &mut Transform)>,
     mut game_state: ResMut<State<GameState>>,
     // mut camera: Query<(&Camera, &mut Transform)>,
 ) {

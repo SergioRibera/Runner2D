@@ -103,9 +103,7 @@ impl Plugin for Enviroment {
             ..Default::default()
         })
         .add_system_set(SystemSet::on_enter(GameState::MainMenu).with_system(setup_enviroment))
-        .add_system_set(
-            SystemSet::on_update(GameState::InGame).with_system(move_camera_system),
-        );
+        .add_system_set(SystemSet::on_update(GameState::InGame).with_system(move_camera_system));
     }
 }
 

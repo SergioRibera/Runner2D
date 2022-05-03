@@ -8,16 +8,18 @@ on:
 env:
   # update with the name of the main binary
   binary: SR_2DRunner
+  gamename: 2d-runner
   username: sergioribera
 
 
 jobs:
-
   # Build for wasm
   release-wasm:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: little-core-labs/get-git-tag@v3.0.1
+        id: get_version
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
@@ -29,10 +31,10 @@ jobs:
           cargo install wasm-bindgen-cli
       - name: Build
         run: |
-          cargo build --release --target wasm32-unknown-unknown --no-default-features
+          cargo build --release --target wasm32-unknown-unknown
       - name: Prepare package
         run: |
-          wasm-bindgen --no-typescript --out-name bevy_game --out-dir wasm --target web target/wasm32-unknown-unknown/release/${{ env.binary }}.wasm
+          wasm-bindgen --no-typescript --out-name ${{env.binary}} --out-dir wasm --target web target/wasm32-unknown-unknown/release/${{ env.binary }}.wasm
           cp -r assets wasm/
       - name: Package as a zip
         uses: vimtor/action-zip@v1
@@ -40,21 +42,22 @@ jobs:
           files: wasm
           dest: ${{ env.binary }}.zip
 
-      - name: Uploading
-        uses: SergioRibera/Runner2D/.github/workflows/cd.yaml@main
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          username: ${{ env.username }}
-          name: ${{ env.binary }}
-          channel: wasm
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ env.binary }}.zip
-          itch: ${{ secrets.BUTLER_CREDENTIALS }}
+          asset_name: ${{ env.binary }}-wasm-${{ steps.get_version.outputs.tag }}.zip
+          tag: ${{ github.ref }}
+          overwrite: true
 
   # Build for Linux
   release-linux:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: little-core-labs/get-git-tag@v3.0.1
+        id: get_version
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
@@ -66,7 +69,7 @@ jobs:
           sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
       - name: Build
         run: |
-          cargo build --release --target x86_64-unknown-linux-gnu --no-default-features
+          cargo build --release --target x86_64-unknown-linux-gnu
       - name: Prepare package
         run: |
           mkdir linux
@@ -78,21 +81,31 @@ jobs:
           files: linux
           dest: ${{ env.binary }}.zip
 
-      - name: Uploading
-        uses: SergioRibera/Runner2D/.github/workflows/cd.yaml@main
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          username: ${{ env.username }}
-          name: ${{ env.binary }}
-          channel: linux
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ env.binary }}.zip
-          itch: ${{ secrets.BUTLER_CREDENTIALS }}
+          asset_name: ${{ env.binary }}-linux-${{ steps.get_version.outputs.tag }}.zip
+          tag: ${{ github.ref }}
+          overwrite: true
+      # Upload To Itch.io
+      - name: Upload to Itch.io
+        uses: josephbmanley/butler-publish-itchio-action@master
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
+          CHANNEL: linux
+          ITCH_GAME: ${{ env.gamename }}
+          ITCH_USER: ${{ env.username }}
+          PACKAGE: ${{ env.binary }}.zip
 
   # Build for Windows
   release-windows:
     runs-on: windows-latest
 
     steps:
+      - uses: little-core-labs/get-git-tag@v3.0.1
+        id: get_version
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
@@ -102,7 +115,7 @@ jobs:
 
       - name: Build
         run: |
-          cargo build --release --target x86_64-pc-windows-msvc --no-default-features
+          cargo build --release --target x86_64-pc-windows-msvc
       - name: Prepare package
         run: |
           mkdir windows
@@ -114,21 +127,31 @@ jobs:
           files: windows
           dest: ${{ env.binary }}.zip
 
-      - name: Uploading
-        uses: SergioRibera/Runner2D/.github/workflows/cd.yaml@main
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          username: ${{ env.username }}
-          name: ${{ env.binary }}
-          channel: windows
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ env.binary }}.zip
-          itch: ${{ secrets.BUTLER_CREDENTIALS }}
+          asset_name: ${{ env.binary }}-windows-${{ steps.get_version.outputs.tag }}.zip
+          tag: ${{ github.ref }}
+          overwrite: true
+      # Upload To Itch.io
+      - name: Upload to Itch.io
+        uses: josephbmanley/butler-publish-itchio-action@master
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
+          CHANNEL: windows
+          ITCH_GAME: ${{ env.gamename }}
+          ITCH_USER: ${{ env.username }}
+          PACKAGE: ${{ env.binary }}.zip
 
   # Build for macOS
   release-macos:
     runs-on: macos-latest
 
     steps:
+      - uses: little-core-labs/get-git-tag@v3.0.1
+        id: get_version
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
@@ -141,20 +164,27 @@ jobs:
           export MACOSX_DEPLOYMENT_TARGET="10.9"
       - name: Build
         run: |
-          cargo build --release --target x86_64-apple-darwin --no-default-features
+          cargo build --release --target x86_64-apple-darwin
       - name: Prepare Package
         run: |
           mkdir -p ${{ env.binary }}.app/Contents/MacOS
           cp target/x86_64-apple-darwin/release/${{ env.binary }} ${{ env.binary }}.app/Contents/MacOS/
           cp -r assets ${{ env.binary }}.app/Contents/MacOS/
           hdiutil create -fs HFS+ -volname "${{ env.binary }}" -srcfolder ${{ env.binary }}.app ${{ env.binary }}.dmg
-
-      - name: Uploading
-        uses: SergioRibera/Runner2D/.github/workflows/cd.yaml@main
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          username: ${{ env.username }}
-          name: ${{ env.binary }}
-          channel: macos
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ env.binary }}.dmg
-          itch: ${{ secrets.BUTLER_CREDENTIALS }}
+          asset_name: ${{ env.binary }}-macos-${{ steps.get_version.outputs.tag }}.dmg
+          tag: ${{ github.ref }}
+          overwrite: true
+      # Upload To Itch.io
+      - name: Upload to Itch.io
+        uses: josephbmanley/butler-publish-itchio-action@master
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
+          CHANNEL: macos
+          ITCH_GAME: ${{ env.gamename }}
+          ITCH_USER: ${{ env.username }}
+          PACKAGE: ${{ env.binary }}.zip

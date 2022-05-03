@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use bevy::{prelude::{Gamepad, KeyCode, GamepadButtonType, State, Res}, ecs::schedule::ShouldRun};
+use bevy::prelude::{Gamepad, KeyCode, GamepadButtonType};
 use leafwing_input_manager::prelude::*;
 
 use self::player::PlayerAction;
@@ -11,6 +11,7 @@ pub mod audio;
 pub mod splash;
 pub mod mainmenu;
 pub mod transition;
+pub mod platform;
 
 pub struct GameSettings {
     pub music_volume: f32,

@@ -91,7 +91,7 @@ fn main() {
     .add_startup_system(load_config)
     .add_plugin(TweeningPlugin)
     .add_plugin(TransitionPlugin)
-    .add_plugin(ParallaxPlugin)
+    // .add_plugin(ParallaxPlugin)
     .add_plugin(PhysicsPlugin::default())
     .add_plugin(InputManagerPlugin::<PlayerAction>::default())
     .add_plugin(MainMenu)

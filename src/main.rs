@@ -1,13 +1,15 @@
 #![allow(dead_code)]
 #[cfg(feature = "ui-debug")]
-use bevy_inspector_egui::WorldInspectorPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-use bevy::{asset::AssetServerSettings, prelude::*, reflect::TypeUuid, window::WindowMode};
-use bevy_asset_loader::{AssetCollection, AssetLoader};
-use bevy_asset_ron::*;
-use bevy_parallax::ParallaxPlugin;
+use bevy::{prelude::*, reflect::TypeUuid, window::WindowMode};
+use bevy_asset_loader::prelude::*;
+use bevy_common_assets::ron::RonAssetPlugin;
+// use bevy_parallax::ParallaxPlugin;
+use bevy_rapier2d::{
+    plugin::RapierPhysicsPlugin, prelude::NoUserData, render::RapierDebugRenderPlugin,
+};
 use bevy_tweening::TweeningPlugin;
-use heron::PhysicsPlugin;
 use leafwing_input_manager::prelude::*;
 
 mod game;
@@ -22,10 +24,6 @@ use game::{
     GameSettings, GameState,
 };
 
-pub struct GameConfigController {
-    handle: Handle<GameConfigAsset>,
-}
-
 #[derive(serde::Deserialize, TypeUuid)]
 #[uuid = "b7f64775-6e72-4080-9ced-167607f1f0b2"]
 pub struct GameConfigAsset {
@@ -39,7 +37,10 @@ pub struct GameConfigAsset {
     pub floor_multiplier: f32,
 }
 
-#[derive(AssetCollection)]
+#[derive(Resource)]
+pub struct GameConfigAssetHandler(Handle<GameConfigAsset>);
+
+#[derive(AssetCollection, Resource)]
 pub struct ImageAssets {
     #[asset(path = "DebugPixel.png")]
     debug_pixel: Handle<Image>,
@@ -49,7 +50,7 @@ pub struct ImageAssets {
     brand_logo: Handle<Image>,
 }
 
-#[derive(AssetCollection)]
+#[derive(AssetCollection, Resource)]
 pub struct GlobalUIAssets {
     #[asset(path = "fonts/pixel_font.ttf")]
     pixel_font: Handle<Font>,
@@ -60,39 +61,34 @@ pub struct GlobalUIAssets {
 fn main() {
     let mut app = App::new();
 
-    AssetLoader::new(GameState::Splash)
-        .continue_to_state(GameState::MainMenu)
-        .with_collection::<ImageAssets>()
-        .with_collection::<EnviromentAssets>()
-        .with_collection::<PlayerAssets>()
-        .with_collection::<GlobalUIAssets>()
-        .build(&mut app);
-
-    app.insert_resource(WindowDescriptor {
-        title: "Bevy Infinity Runner".to_string(),
-        mode: WindowMode::BorderlessFullscreen,
-        ..Default::default()
-    })
-    .insert_resource(AssetServerSettings {
-        watch_for_changes: true,
-        ..default()
-    })
-    .insert_resource(Msaa { samples: 4 })
-    .insert_resource(ClearColor(Color::rgb(
+    app.insert_resource(ClearColor(Color::rgb(
         0.462_745_1,
         0.576_470_6,
         0.701_960_8,
     )))
     .insert_resource(GameSettings::default())
-    .add_state(GameState::Splash)
-    .add_system_set(SystemSet::on_enter(GameState::Splash).with_system(load_splash))
-    .add_plugins(DefaultPlugins)
-    .add_plugin(RonAssetPlugin::<GameConfigAsset>::new(&["ron"]))
-    .add_startup_system(load_config)
-    .add_plugin(TweeningPlugin)
+    .insert_resource(Msaa::Sample4)
+    .add_state::<GameState>()
+    .add_loading_state(LoadingState::new(GameState::Splash))
+    .add_collection_to_loading_state::<_, ImageAssets>(GameState::Splash)
+    .add_collection_to_loading_state::<_, EnviromentAssets>(GameState::Splash)
+    .add_collection_to_loading_state::<_, PlayerAssets>(GameState::Splash)
+    .add_collection_to_loading_state::<_, GlobalUIAssets>(GameState::Splash)
+    .add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "Bevy Infinity Runner".to_string(),
+            mode: WindowMode::BorderlessFullscreen,
+            ..default()
+        }),
+        ..default()
+    }))
+    .add_plugin(RonAssetPlugin::<GameConfigAsset>::new(&["config.ron"]))
+    .add_startup_system(setup)
+    .add_plugin(load_splash())
+    // .add_plugin(TweeningPlugin)
     .add_plugin(TransitionPlugin)
     // .add_plugin(ParallaxPlugin)
-    .add_plugin(PhysicsPlugin::default())
+    .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
     .add_plugin(InputManagerPlugin::<PlayerAction>::default())
     .add_plugin(MainMenu)
     .add_plugin(Enviroment)
@@ -100,11 +96,15 @@ fn main() {
     .add_plugin(PlayerPlugin);
 
     #[cfg(feature = "ui-debug")]
+    app.add_plugin(RapierDebugRenderPlugin::default());
+
+    #[cfg(feature = "ui-debug")]
     app.add_plugin(WorldInspectorPlugin::new());
 
     app.run();
 }
-fn load_config(mut commands: Commands, asset_server: ResMut<AssetServer>) {
-    let handle = asset_server.load("config.ron");
-    commands.insert_resource(GameConfigController { handle });
+
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.insert_resource(GameConfigAssetHandler(asset_server.load("config.ron")));
+    commands.spawn(Camera2dBundle::default());
 }

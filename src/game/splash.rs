@@ -1,104 +1,63 @@
-#![allow(dead_code)]
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_tweening::{lens::TextColorLens, Animator, EaseFunction, Lens, Tween, TweeningType};
+use bevy_splash_screen::{EaseFunction, SplashAssetType, SplashItem, SplashPlugin, SplashScreen};
 
-#[derive(Component)]
-pub struct SplashProgress;
-#[derive(Component)]
-pub struct UIElement;
+use super::GameState;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct UIColorLens {
-    /// Start color.
-    pub start: Color,
-    /// End color.
-    pub end: Color,
-}
-impl Lens<UiColor> for UIColorLens {
-    fn lerp(&mut self, target: &mut UiColor, ratio: f32) {
-        // Note: Add<f32> for Color affects alpha, but not Mul<f32>. So use Vec4 for consistency.
-        let start: Vec4 = self.start.into();
-        let end: Vec4 = self.end.into();
-        let value = start.lerp(end, ratio);
-        target.0.set_r(value.x);
-        target.0.set_g(value.y);
-        target.0.set_b(value.z);
-        target.0.set_a(value.w);
-    }
-}
-
-pub fn load_splash(mut commands: Commands, fonts: Res<AssetServer>) {
-    commands.spawn_bundle(UiCameraBundle::default());
-
-    let tween = Tween::new(
-        EaseFunction::QuadraticIn,
-        TweeningType::PingPong,
-        Duration::from_secs(3),
-        TextColorLens {
-            start: Color::rgba(0.0, 0.0, 0.0, 0.0),
-            end: Color::WHITE,
-            section: 0,
-        },
-    )
-    .with_completed_event(true, 2);
-
-    commands
-        // This is where we're going to define the layout of the main menu.
-        .spawn_bundle(TextBundle {
-            style: Style {
-                position: Rect {
-                    left: Val::Percent(32.),
-                    right: Val::Auto,
-                    top: Val::Auto,
-                    bottom: Val::Auto,
-                },
-                align_content: AlignContent::Center,
-                align_items: AlignItems::Center,
-                align_self: AlignSelf::Center,
-                justify_content: JustifyContent::Center,
-                ..Default::default()
-            },
-            text: Text::with_section(
-                "Sergio Ribera",
-                TextStyle {
-                    // font: fonts.pixel_font.clone(),
-                    font: fonts.load("fonts/pixel_font.ttf"),
-                    font_size: 76.,
-                    color: Color::rgba(0., 0., 0., 0.),
-                },
-                TextAlignment {
-                    vertical: VerticalAlign::Center,
-                    horizontal: HorizontalAlign::Center,
-                },
-            ),
-            ..Default::default()
+pub fn load_splash() -> impl Plugin {
+    SplashPlugin::new(GameState::Splash, GameState::MainMenu, false)
+        .add_screen(SplashScreen {
+            brands: vec![SplashItem {
+                asset: SplashAssetType::SingleText(
+                    Text::from_sections([
+                        TextSection::new(
+                            "Sergio Ribera\n",
+                            TextStyle {
+                                font_size: 76.,
+                                ..default()
+                            },
+                        ),
+                        TextSection::new(
+                            "presents\n",
+                            TextStyle {
+                                font_size: 38.,
+                                ..default()
+                            },
+                        ),
+                    ])
+                    .with_alignment(TextAlignment::Center),
+                    "fonts/pixel_font.ttf".to_string(),
+                ),
+                tint: Color::WHITE,
+                size: Size::new(Val::Percent(40.), Val::Px(80.)),
+                ease_function: EaseFunction::QuarticInOut.into(),
+                duration: Duration::from_secs(5),
+                is_static: false,
+            }],
+            background_color: BackgroundColor(Color::BLACK),
+            ..default()
         })
-        .insert(UIElement)
-        .insert(Animator::new(tween));
+        .add_screen(SplashScreen {
+            brands: vec![SplashItem {
+                asset: SplashAssetType::SingleText(
+                    Text::from_section(
+                        "Runner\n",
+                        TextStyle {
+                            font_size: 150.,
+                            ..default()
+                        },
+                    )
+                    .with_alignment(TextAlignment::Center),
+                    "fonts/pixel_font.ttf".to_string(),
+                ),
+                tint: Color::WHITE,
+                size: Size::new(Val::Percent(35.), Val::Px(160.)),
+                ease_function: EaseFunction::QuarticInOut.into(),
+                duration: Duration::from_secs(5),
+                is_static: false,
+            }],
+            background_color: BackgroundColor(Color::BLACK),
+            ..default()
+        })
 }
-//
-// pub fn on_splash(
-//     mut commands: Commands,
-//     quey_text: Query<&Animator<Text>, With<UIElement>>,
-//     entity_text: Query<Entity, With<UIElement>>,
-//     mut game_state: ResMut<State<GameState>>,
-// ) {
-//     match game_state.current() {
-//         GameState::Splash => {
-//             if let Ok(anim_text) = quey_text.get_single() {
-//                 if let Some(tween_text) = anim_text.tweenable() {
-//                     if tween_text.progress() >= 0.8 {
-//                         game_state.set(GameState::MainMenu).unwrap();
-//                         println!("Splash completed 1");
-//                         if let Ok(entity) = entity_text.get_single() {
-//                             commands.entity(entity).despawn();
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//         _ => return,
-//     }
-// }

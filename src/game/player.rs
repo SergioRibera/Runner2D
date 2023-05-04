@@ -1,10 +1,10 @@
 #![allow(dead_code)]
-use bevy::prelude::*;
-use bevy_asset_loader::AssetCollection;
-use heron::prelude::*;
+use bevy::{prelude::*, window::PrimaryWindow};
+use bevy_asset_loader::prelude::AssetCollection;
+use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::prelude::*;
 
-use crate::{GameConfigAsset, GameConfigController};
+use crate::{GameConfigAsset, GameConfigAssetHandler};
 
 use super::{GameSettings, GameState};
 
@@ -29,7 +29,7 @@ pub enum PlayerAction {
     MoveRight,
 }
 
-#[derive(AssetCollection)]
+#[derive(AssetCollection, Resource)]
 pub struct PlayerAssets {
     #[asset(path = "player/2BlueWizardIdle/Chara - BlueIdle00001.png")]
     player: Handle<Image>,
@@ -39,13 +39,23 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameState::MainMenu).with_system(startup_player))
-            .add_system(player_movement);
+        app.add_system(
+            startup_player
+                .run_if(run_once())
+                .in_schedule(OnEnter(GameState::InGame)),
+        )
+        .add_system(player_movement);
     }
 }
 
 #[derive(Component, Debug)]
 pub struct PlayerSettings;
+
+#[derive(Component, Debug)]
+pub struct PlayerCamera {
+    pub offset_x: f32,
+    pub offset_y: f32,
+}
 
 fn get_resource_name(name: &str) -> String {
     format!("player/2BlueWizardIdle/Chara - BlueIdle000{}.png", name)
@@ -53,24 +63,34 @@ fn get_resource_name(name: &str) -> String {
 
 fn startup_player(
     mut commands: Commands,
-    windows: Res<Windows>,
-    game_cfg: Res<GameSettings>,
+    windows: Query<(&Window, With<PrimaryWindow>)>,
+    cfg: Res<Assets<GameConfigAsset>>,
+    cfg_handle: Res<GameConfigAssetHandler>,
     asset_server: Res<AssetServer>,
-    assets: Res<Assets<GameConfigAsset>>,
-    q: Res<GameConfigController>,
+    mut rapier_config: ResMut<RapierConfiguration>,
 ) {
-    let cfg = assets.get(q.handle.clone()).unwrap();
-    let window = windows.get_primary().unwrap();
+    let cfg = cfg.get(&cfg_handle.0).unwrap();
+    let (window, _) = windows.get_single().unwrap();
     let intit_player_pos_x = -(window.width() * cfg.player_initial_pos_x);
+    rapier_config.gravity = Vec2::new(0.0, -9.81 * cfg.gravity_multiplier);
 
-    commands.insert_resource(Gravity::from(Vec3::new(
-        0.0,
-        -9.81 * cfg.gravity_multiplier,
-        0.0,
-    )));
+    let mut input_map = InputMap::default();
+    input_map.insert(KeyCode::Escape, PlayerAction::Pause);
+    input_map.insert(GamepadButtonType::Select, PlayerAction::Pause);
+    // Move to left
+    input_map.insert(KeyCode::A, PlayerAction::MoveLeft);
+    input_map.insert(KeyCode::Left, PlayerAction::MoveLeft);
+    input_map.insert(GamepadButtonType::East, PlayerAction::MoveLeft);
+    // Move to right
+    input_map.insert(KeyCode::D, PlayerAction::MoveRight);
+    input_map.insert(KeyCode::Right, PlayerAction::MoveRight);
+    input_map.insert(GamepadButtonType::West, PlayerAction::MoveRight);
+    // Jump
+    input_map.insert(KeyCode::Space, PlayerAction::Jump);
+    input_map.insert(GamepadButtonType::South, PlayerAction::Jump);
 
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             texture: asset_server.load(get_resource_name("01").as_str()),
             transform: Transform {
                 translation: Vec3::new(intit_player_pos_x, 0., 1.7),
@@ -82,20 +102,19 @@ fn startup_player(
             },
             ..default()
         })
-        .insert_bundle(InputManagerBundle::<PlayerAction> {
+        .insert(InputManagerBundle::<PlayerAction> {
             action_state: ActionState::default(),
-            input_map: game_cfg.player_ctrl.clone(),
+            input_map,
         })
         .insert(PlayerSettings)
-        .insert(CollisionShape::Cuboid {
-            half_extends: Vec2::new(cfg.player_box_size_x, cfg.player_box_size_y).extend(0.),
-            border_radius: None,
-        })
-        .insert(RotationConstraints::lock())
+        .insert(Collider::cuboid(
+            cfg.player_box_size_x,
+            cfg.player_box_size_y,
+        ))
         .insert(RigidBody::Dynamic);
 
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             texture: asset_server.load("DebugPixel.png"),
             transform: Transform {
                 translation: Vec3::new(intit_player_pos_x, -200., 1.7),
@@ -103,27 +122,25 @@ fn startup_player(
             },
             ..default()
         })
-        .insert(CollisionShape::Cuboid {
-            half_extends: Vec2::new(200., 50.).extend(0.),
-            border_radius: None,
-        })
-        .insert(RotationConstraints::lock())
-        .insert(RigidBody::Static);
+        .insert(Collider::cuboid(200., 50.))
+        .insert(RigidBody::Fixed);
 }
 
 fn player_movement(
     input: Query<&ActionState<PlayerAction>, With<PlayerSettings>>,
     mut query: Query<(&mut PlayerSettings, &mut Sprite, &mut Transform)>,
-    mut game_state: ResMut<State<GameState>>,
+    mut camera_query: Query<(&mut Transform, &mut PlayerCamera), Without<PlayerSettings>>,
+    game_state: Res<State<GameState>>,
+    mut set_game_state: ResMut<NextState<GameState>>,
     // mut camera: Query<(&Camera, &mut Transform)>,
 ) {
     if let Ok(action) = input.get_single() {
         if action.just_pressed(PlayerAction::Pause) {
-            game_state.set(GameState::MainMenu).unwrap();
+            set_game_state.set(GameState::MainMenu);
             return;
         }
         for (_player, mut _sprite, mut transform) in query.iter_mut() {
-            if game_state.current().eq(&GameState::InGame) {
+            if game_state.0.eq(&GameState::InGame) {
                 if action.pressed(PlayerAction::MoveLeft) {
                     transform.translation.x -= PLAYER_SPEED;
                 }
@@ -134,6 +151,13 @@ fn player_movement(
                     transform.translation.y += PLAYER_JUMP_FORCE;
                 }
                 transform.translation.x += PLAYER_SPEED;
+            }
+
+            if let Ok((mut camera_transform, camera_settings)) = camera_query.get_single_mut() {
+                let mut pos_offset = camera_transform.translation - transform.translation;
+                pos_offset -= Vec3::new(camera_settings.offset_x, camera_settings.offset_y, 9.);
+                pos_offset.z = 999.9;
+                // camera_transform.translation = pos_offset;
             }
         }
     }

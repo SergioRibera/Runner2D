@@ -1,13 +1,17 @@
 #![allow(dead_code)]
 
-use bevy::prelude::*;
-use bevy_asset_loader::AssetCollection;
+use bevy::{prelude::*, window::PrimaryWindow};
+use bevy_asset_loader::prelude::AssetCollection;
 // use bevy_parallax::{LayerData, ParallaxCameraComponent, ParallaxMoveEvent, ParallaxResource};
-use heron::prelude::*;
+use bevy_rapier2d::prelude::*;
 
-use crate::{GameConfigAsset, GameConfigController};
+use crate::{GameConfigAsset, GameConfigAssetHandler};
 
-use super::{platform::draw_atlas, player::PLAYER_SPEED, GameState};
+use super::{
+    platform::draw_atlas,
+    player::{PlayerCamera, PlayerSettings, PLAYER_SPEED},
+    GameState,
+};
 
 const ENVIROMENT_WIDTH: f32 = 928.0;
 const ENVIROMENT_HEIGHT: f32 = 793.0;
@@ -17,7 +21,7 @@ pub struct Enviroment;
 #[derive(Component)]
 pub struct Floor;
 
-#[derive(AssetCollection)]
+#[derive(AssetCollection, Resource)]
 pub struct EnviromentAssets {
     #[asset(path = "audio/game_ambient.ogg")]
     pub background: Handle<AudioSource>,
@@ -28,16 +32,9 @@ pub struct EnviromentAssets {
     pub platforms: Handle<TextureAtlas>,
 }
 
-#[derive(PhysicsLayer)]
-pub enum Layer {
-    Player,
-    World,
-    Enemy,
-}
-
 // Parallax system
 #[derive(Component)]
-pub struct ParallaxItem(pub LayerData);
+pub struct ParallaxItem(pub LayerData, pub Vec2);
 
 pub struct LayerData {
     pub speed: Vec2,
@@ -77,6 +74,7 @@ impl Clone for LayerData {
     }
 }
 
+#[derive(Resource)]
 pub struct ParallaxResource {
     pub layers: Vec<LayerData>,
     pub count: u32,
@@ -99,7 +97,7 @@ impl Plugin for Enviroment {
                     tile_size: Vec2::new(ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT),
                     scale: 1.2,
                     z: 0.5,
-                    position: Vec2::new(- ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT / 4.2),
+                    position: Vec2::new(-ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT / 4.2),
                     ..Default::default()
                 },
                 // Gray trees
@@ -109,7 +107,7 @@ impl Plugin for Enviroment {
                     tile_size: Vec2::new(ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT),
                     scale: 1.2,
                     z: 1.0,
-                    position: Vec2::new(- ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT / 4.0),
+                    position: Vec2::new(-ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT / 4.0),
                     ..Default::default()
                 },
                 // More proximite trees
@@ -119,7 +117,7 @@ impl Plugin for Enviroment {
                     tile_size: Vec2::new(ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT),
                     scale: 1.2,
                     z: 1.1,
-                    position: Vec2::new(- ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT / 4.0),
+                    position: Vec2::new(-ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT / 4.0),
                     ..Default::default()
                 },
                 // Top leaf
@@ -129,7 +127,7 @@ impl Plugin for Enviroment {
                     tile_size: Vec2::new(ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT),
                     scale: 1.2,
                     z: 1.1,
-                    position: Vec2::new(- ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT / 4.5),
+                    position: Vec2::new(-ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT / 4.5),
                     ..Default::default()
                 },
                 // Floor of leaf
@@ -139,59 +137,68 @@ impl Plugin for Enviroment {
                     tile_size: Vec2::new(ENVIROMENT_WIDTH, ENVIROMENT_HEIGHT),
                     scale: 1.,
                     z: 2.0,
-                    position: Vec2::new(- ENVIROMENT_WIDTH, -370.0),
+                    position: Vec2::new(-ENVIROMENT_WIDTH, -370.0),
                     ..Default::default()
                 },
             ],
         })
-        .add_system_set(
-            SystemSet::on_enter(GameState::MainMenu)
-                .with_system(setup_enviroment)
-                .with_system(draw_atlas),
-        )
-        // .add_system(move_parallax_system)
-        ;
+        .add_systems((setup_enviroment, draw_atlas).in_schedule(OnEnter(GameState::MainMenu)))
+        .add_system(move_parallax_system);
         // .add_system_set(SystemSet::on_update(GameState::InGame).with_system(move_parallax_system));
     }
 }
 
 fn move_parallax_system(
-    windows: Res<Windows>,
+    windows: Query<(&Window, With<PrimaryWindow>)>,
     mut query: Query<(&mut Transform, &ParallaxItem)>,
+    mut player_query: Query<(&mut PlayerSettings, &mut Transform), Without<ParallaxItem>>,
     game_state: Res<State<GameState>>,
     layer: Res<ParallaxResource>,
 ) {
-    match game_state.current() {
+    match game_state.0 {
         GameState::MainMenu | GameState::InGame => {
-            let window = windows.get_primary().unwrap();
-            for (mut transform, with) in query.iter_mut() {
-                // if (with.0.position.x
-                //     + (with.0.tile_size.x * with.0.scale) * with.0.transition_factor)
-                //     - transform.translation.x
-                //     > 0.
-                //     || (with.0.position.x
-                //         + (with.0.tile_size.x * with.0.scale) * with.0.transition_factor)
-                //         - transform.translation.x
-                //         < window.width()
-                // {
-                //     transform.translation.x = with.0.position.x;
-                // } else {
-                    transform.translation.x += with.0.speed.x * layer.initial_speed;
-                // }
-                //
-                // if (with.0.position.y
-                //     + (with.0.tile_size.y * with.0.scale) * with.0.transition_factor)
-                //     - transform.translation.y
-                //     > 0.
-                //     || (with.0.position.y
-                //         + (with.0.tile_size.y * with.0.scale) * with.0.transition_factor)
-                //         - transform.translation.y
-                //         < window.height()
-                // {
-                //     transform.translation.y = with.0.position.y;
-                // } else {
-                //     transform.translation.y += with.0.speed.y + layer.initial_speed;
-                // }
+            let (window, _) = windows.get_single().unwrap();
+            for (mut transform, parallax_item) in query.iter_mut() {
+                if let Ok((_player, player_transform)) = player_query.get_single_mut() {
+                    if player_transform.translation.x - transform.translation.x
+                        + ((parallax_item.0.tile_size.x * parallax_item.0.scale) / 2.)
+                        < -(window.width() * parallax_item.0.transition_factor)
+                    {
+                        transform.translation.x -= parallax_item.0.speed.x * layer.initial_speed;
+                    } else if player_transform.translation.x - transform.translation.x
+                        + ((parallax_item.0.tile_size.x * parallax_item.0.scale) / 2.)
+                        > window.width() * parallax_item.0.transition_factor
+                    {
+                        transform.translation.x += parallax_item.0.speed.x * layer.initial_speed;
+                    }
+
+                    // if (parallax_item.0.position.x
+                    //     + (parallax_item.0.tile_size.x * parallax_item.0.scale)
+                    //         * parallax_item.0.transition_factor)
+                    //     - transform.translation.x
+                    //     > (parallax_item.0.transition_factor * parallax_item.0.tile_size.x)
+                    // {
+                    //     transform.translation.x = parallax_item.1.x * layer.count as f32;
+                    // } else {
+                    //     transform.translation.x -= parallax_item.0.speed.x * layer.initial_speed;
+                    // }
+                    //
+                    // if (parallax_item.0.position.y
+                    //     + (parallax_item.0.tile_size.y * parallax_item.0.scale)
+                    //         * parallax_item.0.transition_factor)
+                    //     - transform.translation.y
+                    //     > 0.
+                    //     || (parallax_item.0.position.y
+                    //         + (parallax_item.0.tile_size.y * parallax_item.0.scale)
+                    //             * parallax_item.0.transition_factor)
+                    //         - transform.translation.y
+                    //         < window.height()
+                    // {
+                    //     transform.translation.y = parallax_item.1.y * layer.count as f32;
+                    // } else {
+                    //     transform.translation.y -= parallax_item.0.speed.y + layer.initial_speed;
+                    // }
+                }
             }
         }
         _ => {}
@@ -204,19 +211,24 @@ fn get_resource_name(name: &str) -> String {
 
 fn setup_enviroment(
     mut commands: Commands,
-    windows: Res<Windows>,
+    windows: Query<(&Window, With<PrimaryWindow>)>,
     asset_server: ResMut<AssetServer>,
-    assets: Res<Assets<GameConfigAsset>>,
-    q: Res<GameConfigController>,
+    cfg: ResMut<Assets<GameConfigAsset>>,
+    cfg_handle: Res<GameConfigAssetHandler>,
     parallax: Res<ParallaxResource>,
 ) {
-    let cfg = assets.get(q.handle.clone()).unwrap();
-    let window = windows.get_primary().unwrap();
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    let (window, _) = windows.get_single().unwrap();
+    let cfg = cfg.get(&cfg_handle.0).unwrap();
+    let mut cam2d = commands.spawn(Camera2dBundle::default());
+
+    cam2d.insert(PlayerCamera {
+        offset_x: -250.,
+        offset_y: 0.,
+    });
 
     for (i, layer) in parallax.layers.iter().enumerate() {
-        let mut layer_entity = commands.spawn();
-        layer_entity
+        commands
+            .spawn_empty()
             .insert(Name::new(format!("Parallax Layer ({})", i)))
             .insert(Transform {
                 translation: Vec3::new(0.0, 0.0, layer.z),
@@ -229,7 +241,7 @@ fn setup_enviroment(
                 for x in 0..parallax.count {
                     let new_pos = layer.position + Vec2::new(x as f32 * layer.tile_size.x, 0.0);
                     parent
-                        .spawn_bundle(SpriteBundle {
+                        .spawn(SpriteBundle {
                             texture: image.clone(),
                             transform: Transform {
                                 translation: Vec3::new(new_pos.x, new_pos.y, 0.0),
@@ -238,14 +250,13 @@ fn setup_enviroment(
                             },
                             ..Default::default()
                         })
-                        .insert(GlobalTransform::default())
-                        .insert(ParallaxItem(layer.clone()));
+                        .insert(ParallaxItem(layer.clone(), new_pos.clone()));
                 }
             });
     }
 
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             texture: asset_server.load("DebugPixel.png"),
             transform: Transform {
                 translation: Vec3::new(0.0, -(window.height() * cfg.floor_multiplier), 5.0),
@@ -254,12 +265,8 @@ fn setup_enviroment(
             ..default()
         })
         .insert(Floor)
-        .insert(CollisionShape::Cuboid {
-            half_extends: Vec2::new(window.width(), 50.0).extend(0.0),
-            border_radius: None,
-        })
-        .insert(RotationConstraints::lock())
-        .insert(RigidBody::Static);
+        .insert(Collider::cuboid(window.width(), 50.))
+        .insert(RigidBody::Fixed);
 }
 
 // pub fn move_camera_system(

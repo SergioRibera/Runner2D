@@ -8,18 +8,25 @@ opt-level = "z"
 lto = true
 
 [features]
-default = [ "ui-debug" ]
-ui-debug = [ "dep:bevy-inspector-egui", "heron/debug-2d" ]
+default = ["ui-debug"]
+ui-debug = ["bevy-inspector-egui", "bevy_rapier2d/debug-render-2d"]
 dist = []
 
 [dependencies]
-serde = "1"
-bevy = "0.7"
+serde = { version = "1", features = ["derive"] }
+bevy = "0.10.1"
 rand = "0.8.5"
-bevy_tweening = "0.4.0"
-bevy_asset_ron = "0.4.0"
-bevy_asset_loader = { version = "0.10.0", features = [ "2d" ]}
-leafwing-input-manager = "0.3.0"
-heron = { version = "3.0.0", features = [ "2d" ] }
-bevy-parallax = { git = "https://github.com/SergioRibera/bevy-parallax", branch = "feature_add_position_parameter" }
-bevy-inspector-egui = { version = "0.10.0", optional = true }
+bevy_tweening = "0.7.0"
+bevy_common_assets = { version = "0.6", features = ["ron"] }
+leafwing-input-manager = { version = "0.9.2", features = ["egui"] }
+bevy-inspector-egui = { version = "0.18", optional = true }
+bevy_splash_screen = "0.2.0"
+bevy-parallax = "0.5.0"
+bevy_rapier2d = { version = "0.21.0", default-features = false, features = [
+    "dim2",
+    "async-collider",
+] }
+bevy_asset_loader = { version = "0.16.0", features = ["2d"] }
+
+[patch.crates-io]
+bevy_tweening = { git = "https://github.com/sibsibsib/bevy_tweening", branch = "mirrored_repeat_fix" }

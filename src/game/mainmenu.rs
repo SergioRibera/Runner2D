@@ -2,12 +2,11 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_tweening::{lens::TextColorLens, Animator, EaseFunction, Tween, TweeningType};
+use bevy_tweening::{lens::TextColorLens, Animator, EaseFunction, RepeatStrategy, Tween};
 
 use crate::GlobalUIAssets;
 
 use super::{
-    splash::UIElement,
     transition::{hide_text, show_text, TransitionElement},
     GameState,
 };
@@ -23,8 +22,9 @@ struct MainMenuButton {
     action: MainMenuState,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash, States)]
 enum MainMenuState {
+    #[default]
     Main,
     Play,
     Options,
@@ -34,21 +34,17 @@ enum MainMenuState {
 
 impl Plugin for MainMenu {
     fn build(&self, app: &mut App) {
-        app.add_state(MainMenuState::Main)
-            .add_system_set(
-                SystemSet::on_enter(GameState::MainMenu)
-                    .with_system(setup_ui)
-                    .with_system(show_text),
-            )
-            .add_system_set(SystemSet::on_enter(MainMenuState::Main).with_system(show_text))
-            .add_system_set(SystemSet::on_update(GameState::MainMenu).with_system(button_system))
-            .add_system_set(SystemSet::on_exit(GameState::MainMenu).with_system(hide_text))
+        app.add_state::<MainMenuState>()
+            .add_systems((build_main_menu, show_text).in_schedule(OnEnter(GameState::MainMenu)))
+            .add_system(show_text.in_schedule(OnEnter(MainMenuState::Main)))
+            .add_system(button_system.run_if(in_state(GameState::MainMenu)))
+            .add_system(hide_text.in_schedule(OnExit(GameState::MainMenu)))
             // Submenu Options
-            .add_system_set(SystemSet::on_enter(MainMenuState::Options).with_system(show_text))
-            .add_system_set(SystemSet::on_exit(MainMenuState::Options).with_system(hide_text))
+            .add_system(show_text.in_schedule(OnEnter(MainMenuState::Options)))
+            .add_system(hide_text.in_schedule(OnExit(MainMenuState::Options)))
             // Submenu Credits
-            .add_system_set(SystemSet::on_enter(MainMenuState::Credits).with_system(show_text))
-            .add_system_set(SystemSet::on_exit(MainMenuState::Credits).with_system(hide_text));
+            .add_system(show_text.in_schedule(OnEnter(MainMenuState::Credits)))
+            .add_system(hide_text.in_schedule(OnExit(MainMenuState::Credits)));
     }
 }
 
@@ -56,7 +52,7 @@ fn button_system(
     mut interaction_query: Query<(&Interaction, &Children), (Changed<Interaction>, With<Button>)>,
     mut text_query: Query<(&Text, &mut Visibility)>,
     mut btn_query: Query<(&Text, &MainMenuButton)>,
-    mut game_state: ResMut<State<GameState>>,
+    mut game_state: ResMut<NextState<GameState>>,
 ) {
     for (interaction, children) in interaction_query.iter_mut() {
         let (_text, mut visibility) = text_query.get_mut(children[0]).unwrap();
@@ -65,7 +61,7 @@ fn button_system(
             Interaction::Clicked => {
                 match btn.action {
                     MainMenuState::Play => {
-                        game_state.set(GameState::InGame).unwrap();
+                        game_state.set(GameState::InGame);
                     }
                     MainMenuState::Options => {}
                     MainMenuState::Credits => {}
@@ -77,26 +73,13 @@ fn button_system(
                 }
             }
             Interaction::Hovered => {
-                visibility.is_visible = true;
+                *visibility = Visibility::Visible;
             }
             Interaction::None => {
-                visibility.is_visible = false;
+                *visibility = Visibility::Hidden;
             }
         }
     }
-}
-
-fn setup_ui(
-    mut commands: Commands,
-    font_assets: Res<GlobalUIAssets>,
-    entity_text: Query<Entity, With<UIElement>>,
-) {
-    if let Ok(entity) = entity_text.get_single() {
-        commands.entity(entity).despawn();
-    }
-
-    // build_credits_menu(&mut commands, &font_assets);
-    build_main_menu(commands, font_assets);
 }
 
 fn build_main_menu(mut commands: Commands, font_assets: Res<GlobalUIAssets>) {
@@ -107,45 +90,41 @@ fn build_main_menu(mut commands: Commands, font_assets: Res<GlobalUIAssets>) {
         ("Quit", MainMenuState::Quit),
     ];
     commands
-        .spawn_bundle(NodeBundle {
+        .spawn(NodeBundle {
             style: Style {
                 flex_direction: FlexDirection::ColumnReverse,
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                position: Rect {
+                position: UiRect {
                     top: Val::Percent(0.),
                     left: Val::Percent(0.),
-                    right: Val::Auto,
-                    bottom: Val::Auto,
+                    ..default()
                 },
                 ..Default::default()
             },
-            color: UiColor(Color::rgba(0., 0., 0., 0.)),
+            // color: UiColor(Color::rgba(0., 0., 0., 0.)),
             ..default()
         })
         .with_children(|parent| {
             parent
-                .spawn_bundle(TextBundle {
+                .spawn(TextBundle {
                     style: Style {
                         size: Size::new(Val::Percent(100.0), Val::Percent(30.0)),
-                        position: Rect {
+                        position: UiRect {
                             bottom: Val::Percent(6.),
                             left: Val::Percent(13.),
-                            ..Default::default()
+                            ..default()
                         },
                         ..Default::default()
                     },
-                    text: Text::with_section(
+                    text: Text::from_section(
                         "Bevy Runner",
                         TextStyle {
                             font: font_assets.pixel_font.clone(),
                             font_size: 62.0,
                             color: Color::WHITE,
                         },
-                        TextAlignment {
-                            vertical: VerticalAlign::Center,
-                            horizontal: HorizontalAlign::Center,
-                        },
-                    ),
+                    )
+                    .with_alignment(TextAlignment::Center),
                     ..default()
                 })
                 .insert(TransitionElement {
@@ -153,21 +132,20 @@ fn build_main_menu(mut commands: Commands, font_assets: Res<GlobalUIAssets>) {
                     ..default()
                 });
             parent
-                .spawn_bundle(NodeBundle {
+                .spawn(NodeBundle {
                     style: Style {
                         flex_direction: FlexDirection::ColumnReverse,
                         size: Size::new(Val::Percent(100.0), Val::Percent(30.0)),
-                        margin: Rect {
+                        margin: UiRect {
                             left: Val::Percent(65.),
-                            ..Default::default()
+                            ..default()
                         },
-                        position: Rect {
+                        position: UiRect {
                             top: Val::Percent(6.),
                             ..default()
                         },
                         ..Default::default()
                     },
-                    color: UiColor(Color::rgba(0., 0., 0., 0.)),
                     ..default()
                 })
                 .with_children(|node_parent| {
@@ -186,19 +164,18 @@ fn build_credits_menu(commands: &mut Commands, font_assets: &Res<GlobalUIAssets>
         ("Sound Effects", vec!["Sergio Ribera"]),
     ];
     commands
-        .spawn_bundle(NodeBundle {
+        .spawn(NodeBundle {
             style: Style {
                 flex_direction: FlexDirection::ColumnReverse,
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                position: Rect {
+                position: UiRect {
                     top: Val::Percent(0.),
                     left: Val::Percent(0.),
                     right: Val::Auto,
                     bottom: Val::Auto,
                 },
-                ..Default::default()
+                ..default()
             },
-            color: UiColor(Color::rgba(0., 0., 0., 0.)),
             ..default()
         })
         .with_children(|parent| {
@@ -210,54 +187,48 @@ fn build_credits_menu(commands: &mut Commands, font_assets: &Res<GlobalUIAssets>
             );
 
             for (title, content) in credits {
-                parent.spawn_bundle(TextBundle {
+                parent.spawn(TextBundle {
                     style: Style {
                         size: Size::new(Val::Percent(100.0), Val::Percent(30.0)),
-                        position: Rect {
+                        position: UiRect {
                             bottom: Val::Percent(6.),
                             left: Val::Percent(13.),
-                            ..Default::default()
+                            ..default()
                         },
-                        ..Default::default()
+                        ..default()
                     },
-                    text: Text::with_section(
+                    text: Text::from_section(
                         title,
                         TextStyle {
                             font: font_assets.pixel_font.clone(),
                             font_size: 62.0,
                             color: Color::WHITE,
                         },
-                        TextAlignment {
-                            vertical: VerticalAlign::Center,
-                            horizontal: HorizontalAlign::Center,
-                        },
-                    ),
+                    )
+                    .with_alignment(TextAlignment::Center),
                     ..default()
                 });
 
                 for text in content {
-                    parent.spawn_bundle(TextBundle {
+                    parent.spawn(TextBundle {
                         style: Style {
                             size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                            position: Rect {
+                            position: UiRect {
                                 top: Val::Percent(0.),
                                 left: Val::Percent(0.),
-                                ..Default::default()
+                                ..default()
                             },
-                            ..Default::default()
+                            ..default()
                         },
-                        text: Text::with_section(
+                        text: Text::from_section(
                             text,
                             TextStyle {
                                 font: font_assets.pixel_font.clone(),
                                 font_size: 32.0,
                                 color: Color::WHITE,
                             },
-                            TextAlignment {
-                                vertical: VerticalAlign::Center,
-                                horizontal: HorizontalAlign::Center,
-                            },
-                        ),
+                        )
+                        .with_alignment(TextAlignment::Center),
                         ..default()
                     });
                 }
@@ -267,45 +238,39 @@ fn build_credits_menu(commands: &mut Commands, font_assets: &Res<GlobalUIAssets>
 
 fn build_btn(parent: &mut ChildBuilder, font: Handle<Font>, text: &str, action: MainMenuState) {
     parent
-        .spawn_bundle(ButtonBundle {
-            color: UiColor(Color::rgba(0., 0., 0., 0.)),
-            ..default()
-        })
+        .spawn(ButtonBundle::default())
         .with_children(|btn_parent| {
             let tween = Tween::new(
                 EaseFunction::CubicInOut,
-                TweeningType::PingPong,
                 Duration::from_millis(500),
                 TextColorLens {
                     start: Color::rgba(0.0, 0.0, 0.0, 0.0),
                     end: Color::WHITE,
                     section: 0,
                 },
-            );
+            )
+            .with_repeat_strategy(RepeatStrategy::MirroredRepeat);
 
             btn_parent
-                .spawn_bundle(TextBundle {
+                .spawn(TextBundle {
                     style: Style {
-                        position: Rect {
+                        position: UiRect {
                             top: Val::Percent(0.5),
-                            ..Default::default()
+                            ..default()
                         },
-                        ..Default::default()
+                        ..default()
                     },
-                    text: Text::with_section(
+                    text: Text::from_section(
                         ">",
                         TextStyle {
                             font: font.clone(),
                             font_size: 48.,
                             color: Color::rgba(0., 0., 0., 0.),
                         },
-                        TextAlignment {
-                            vertical: VerticalAlign::Center,
-                            horizontal: HorizontalAlign::Center,
-                        },
-                    ),
-                    visibility: Visibility { is_visible: false },
-                    ..Default::default()
+                    )
+                    .with_alignment(TextAlignment::Center),
+                    visibility: Visibility::Hidden,
+                    ..default()
                 })
                 .insert(TransitionElement {
                     color_target: Color::WHITE,
@@ -315,20 +280,17 @@ fn build_btn(parent: &mut ChildBuilder, font: Handle<Font>, text: &str, action: 
 
             // Instancing text content of button
             btn_parent
-                .spawn_bundle(TextBundle {
-                    text: Text::with_section(
+                .spawn(TextBundle {
+                    text: Text::from_section(
                         text,
                         TextStyle {
                             font,
                             font_size: 32.0,
                             color: Color::WHITE,
                         },
-                        TextAlignment {
-                            vertical: VerticalAlign::Center,
-                            horizontal: HorizontalAlign::Center,
-                        },
-                    ),
-                    ..Default::default()
+                    )
+                    .with_alignment(TextAlignment::Center),
+                    ..default()
                 })
                 .insert(TransitionElement {
                     color_target: Color::WHITE,
